@@ -1,0 +1,1579 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Wevlo — Store</title>
+<link rel="stylesheet" href="../css/style.css"/>
+<style>
+/* ══════════════════════════════
+   STORE PAGE — App Store style
+══════════════════════════════ */
+body, html { overflow: hidden; height: 100%; margin: 0; padding: 0; }
+
+/* Hide global header — store has its own */
+.header { display: none !important; }
+
+/* Override global layout for store page */
+.layout {
+  min-height: unset !important;
+  height: 100% !important;
+  padding-top: 0 !important;
+  flex: 1;
+  display: flex;
+  overflow: clip;
+}
+
+/* ── Layout ── */
+.store-layout {
+  display: flex; flex-direction: column;
+  height: 100%;
+  width: 100%;
+  overflow: clip; position: relative;
+}
+
+/* ── Store Header — matches global .header exactly ── */
+.store-header {
+  flex-shrink: 0;
+  height: var(--header-h);
+  background: rgba(255,255,255,.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center;
+  padding: 0 20px;
+  gap: 14px;
+  z-index: 100;
+}
+
+/* Logo — matches .header-logo */
+.store-topbar-logo {
+  display: flex; align-items: center; gap: 9px;
+  font-weight: 800; font-size: 1.1rem;
+  color: var(--text); flex: 1;
+  letter-spacing: -.02em; text-decoration: none;
+}
+.store-topbar-logo-icon {
+  width: 34px; height: 34px; border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden; padding: 0;
+}
+
+/* Search bar — inline, matches .header-search */
+.store-search-wrap {
+  width: 200px;
+  position: relative;
+  flex-shrink: 0;
+}
+.store-search-wrap input {
+  width: 100%;
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px 14px 8px 36px;
+  font-size: .875rem; color: var(--text);
+  transition: all var(--transition);
+  font-family: var(--font); outline: none;
+}
+.store-search-wrap input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(37,99,235,.1);
+}
+.store-search-wrap input::placeholder { color: var(--text-light); }
+.store-search-icon {
+  position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+  color: var(--text-light); pointer-events: none;
+}
+
+/* Notification icon */
+.store-notif-btn {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; flex-shrink: 0;
+  position: relative; transition: background 0.2s;
+}
+.store-notif-btn:hover { background: var(--primary-50); border-color: var(--primary); }
+.store-notif-dot {
+  position: absolute; top: 6px; right: 6px;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--danger);
+  border: 2px solid #fff;
+}
+
+/* Mobile */
+@media (max-width: 640px) {
+  .store-header { padding: 0 14px; }
+}
+
+/* Category chips */
+.store-cats {
+  display: flex; gap: 8px; overflow-x: auto;
+  padding: 0 16px 10px; scrollbar-width: none;
+}
+.store-cats::-webkit-scrollbar { display: none; }
+.store-cat {
+  padding: 7px 18px; border-radius: 20px;
+  background: transparent; border: 1px solid var(--border);
+  color: var(--text-muted); font-size: 13px; font-weight: 700;
+  white-space: nowrap; cursor: pointer; transition: 0.2s;
+  flex-shrink: 0; font-family: var(--font);
+}
+.store-cat.active {
+  background: var(--text-main); color: #fff; border-color: var(--text-main);
+}
+
+/* ── Scrollable Content ── */
+.store-content {
+  flex: 1; overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 80px;
+}
+
+/* ── Banner ── */
+.store-banner-wrap {
+  margin: 12px 16px; border-radius: 16px;
+  overflow: hidden; position: relative;
+  height: 180px; background: #1e3a8a;
+}
+.banner-track { display: flex; height: 100%; transition: transform .5s ease; }
+.banner-slide { min-width: 100%; height: 100%; position: relative; flex-shrink: 0; cursor: pointer; }
+.banner-slide img { width: 100%; height: 100%; object-fit: cover; }
+.banner-slide-placeholder {
+  width: 100%; height: 100%;
+  background: linear-gradient(135deg,#1e3a8a,#2563eb,#0891b2);
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  color: #fff; font-size: 1.05rem; font-weight: 700;
+}
+.banner-dots {
+  position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
+  display: flex; gap: 5px;
+}
+.banner-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: rgba(255,255,255,.4); cursor: pointer; transition: all .3s;
+}
+.banner-dot.active { background: #fff; width: 20px; border-radius: 4px; }
+
+/* ── Banner Shimmer ── */
+.banner-shimmer {
+  width: 100%; height: 100%;
+  background: linear-gradient(90deg,
+    rgba(255,255,255,.08) 25%,
+    rgba(255,255,255,.22) 50%,
+    rgba(255,255,255,.08) 75%
+  );
+  background-size: 200% 100%;
+  animation: bannerShimmer 1.4s infinite;
+  border-radius: 0;
+}
+@keyframes bannerShimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ── Section title ── */
+.store-section-title {
+  padding: 4px 16px 8px;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.store-section-title h3 {
+  margin: 0; font-size: 19px; font-weight: 800; color: var(--text-main);
+}
+.store-section-title span {
+  font-size: 13px; color: var(--primary); font-weight: 700; cursor: pointer;
+}
+
+/* ── Flash sale row ── */
+.flash-header {
+  display: none; align-items: center;
+  justify-content: space-between;
+  padding: 0 16px; margin-bottom: 8px;
+}
+.flash-title {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 1rem; font-weight: 700;
+}
+.flash-badge {
+  background: var(--danger); color: #fff;
+  font-size: .65rem; font-weight: 800;
+  padding: 3px 7px; border-radius: 4px;
+  animation: pulse 1.5s infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.6} }
+.flash-timer { font-size: .9rem; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--danger); }
+.flash-row {
+  display: none; gap: 12px; overflow-x: auto;
+  padding: 0 16px 8px; scrollbar-width: none; margin-bottom: 4px;
+}
+.flash-row::-webkit-scrollbar { display: none; }
+.flash-card {
+  flex-shrink: 0; width: 150px; border-radius: 12px;
+  border: 1px solid var(--border); overflow: hidden;
+  cursor: pointer; background: var(--surface);
+  transition: transform .2s, box-shadow .2s;
+}
+.flash-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+.flash-thumb { height: 100px; overflow: hidden; }
+.flash-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.flash-body { padding: 8px 10px; }
+.flash-name { font-size: .8rem; font-weight: 700; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.flash-price-row { display: flex; align-items: center; gap: 5px; }
+.flash-new-price { font-size: .85rem; font-weight: 800; color: var(--danger); }
+.flash-old-price { font-size: .72rem; text-decoration: line-through; color: var(--text-muted); }
+.flash-discount { font-size: .68rem; background: #fee2e2; color: var(--danger); padding: 1px 5px; border-radius: 4px; font-weight: 700; }
+
+/* ── App-store style list ── */
+.store-list { padding: 0 16px; display: flex; flex-direction: column; }
+.store-app-row {
+  display: flex; align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+  cursor: pointer; text-decoration: none;
+  gap: 14px;
+}
+.store-app-row:last-child { border-bottom: none; }
+.store-app-icon {
+  width: 62px; height: 62px; border-radius: 14px;
+  object-fit: cover; flex-shrink: 0;
+  border: 1px solid var(--border);
+}
+.store-app-icon-placeholder {
+  width: 62px; height: 62px; border-radius: 14px;
+  flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+  font-size: 22px; font-weight: 800; color: #fff;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+}
+.store-app-info { flex: 1; overflow: hidden; }
+.store-app-name {
+  font-size: 15px; font-weight: 700; color: var(--text-main);
+  margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.store-app-cat { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+.store-app-rating { font-size: 11px; color: #FF9500; }
+.store-app-rating svg { display: inline; vertical-align: middle; }
+.get-btn {
+  flex-shrink: 0;
+  background: rgba(0,122,255,0.1); color: #007AFF;
+  border: none; padding: 7px 18px; border-radius: 16px;
+  font-weight: 800; font-size: 13px; cursor: pointer;
+  font-family: var(--font); transition: 0.2s;
+}
+.get-btn.free-tag { background: #e8f5e9; color: #2e7d32; }
+.get-btn.paid-tag { background: rgba(37,99,235,0.1); color: var(--primary); }
+.get-btn:hover { opacity: 0.8; }
+
+/* ── Search / filtered results ── */
+#store-search-results {
+  display: none; padding: 0 16px;
+}
+.search-result-header {
+  font-size: 13px; color: var(--text-muted); font-weight: 600;
+  padding: 10px 0 6px; display: flex; justify-content: space-between;
+}
+.search-result-header span { color: var(--primary); cursor: pointer; font-weight: 700; }
+
+/* ── Skeleton ── */
+.skel {
+  border-radius: var(--radius-sm);
+  background: linear-gradient(90deg,var(--surface2) 25%,#e8edf3 50%,var(--surface2) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+}
+@keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+.skel-row { display: flex; align-items: center; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.skel-icon { width: 62px; height: 62px; border-radius: 14px; flex-shrink: 0; }
+.skel-lines { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+.skel-line { height: 13px; border-radius: 6px; }
+
+/* ── Empty state ── */
+.store-empty {
+  text-align: center; padding: 56px 24px; color: var(--text-muted);
+  background: var(--surface2); border-radius: 16px;
+  border: 1.5px dashed var(--border); margin: 8px 0;
+}
+.store-empty svg { margin-bottom: 16px; opacity: 0.35; }
+.store-empty h3 { font-size: 17px; font-weight: 700; color: var(--text-main); margin-bottom: 8px; }
+.store-empty p { font-size: 13.5px; color: var(--text-muted); line-height: 1.6; max-width: 220px; margin: 0 auto; }
+
+/* ── Payment Modal Tabs & Panels ── */
+.payment-tabs {
+  display: flex; gap: 6px;
+  padding: 16px 20px 0;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 4px;
+}
+.pay-tab {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 14px;
+  border: none; background: none;
+  border-radius: 8px 8px 0 0;
+  font-size: 13px; font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: color .15s, border-color .15s;
+}
+.pay-tab:hover { color: var(--text-main); }
+.pay-tab.active {
+  color: var(--accent, #3b6ef8);
+  border-bottom-color: var(--accent, #3b6ef8);
+}
+
+/* Hide all panels by default, show only active */
+.pay-panel { display: none; padding: 16px 20px 20px; }
+.pay-panel.active { display: block; }
+
+/* Wallet balance card */
+.wallet-balance-card {
+  background: var(--surface2, #f5f7fa);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 14px;
+}
+.wallet-balance-card .lbl { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+.wallet-balance-card .amt { font-size: 22px; font-weight: 700; color: var(--text-main); }
+
+/* bKash/Nagad payment info */
+.payment-info {
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 14px;
+  cursor: pointer;
+  transition: transform .15s;
+  border: 1.5px dashed;
+}
+.payment-info:active { transform: scale(.98); }
+.bkash-info  { background: #fff0f6; border-color: #E2136E; }
+.nagad-info  { background: #fff8f0; border-color: #F6921E; }
+.pay-method-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.pay-method-label { font-size: 13px; color: var(--text-muted); font-weight: 500; }
+.pay-number { font-size: 20px; font-weight: 700; color: var(--text-main); font-family: monospace; letter-spacing: 1px; }
+.pay-copy-hint { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+
+/* Pay status message */
+.pay-status-msg { margin-top: 10px; font-size: 13px; font-weight: 500; border-radius: 8px; padding: 0; display: none; line-height: 1.5; }
+.pay-status-msg.success { display:block; color: #1B5E20; background: #E8F5E9; padding: 10px 12px; }
+.pay-status-msg.error   { display:block; color: #B71C1C; background: #FFEBEE; padding: 10px 12px; }
+.pay-status-msg.loading { display:block; color: var(--text-muted); background: var(--surface2); padding: 10px 12px; }
+
+/* Spinner inside button */
+.pay-spin { display:inline-block; width:14px; height:14px; border:2px solid rgba(255,255,255,.4); border-top-color:#fff; border-radius:50%; animation:spin .7s linear infinite; vertical-align:middle; margin-right:6px; }
+@keyframes spin { to { transform:rotate(360deg); } }
+</style>
+</head>
+<script>
+// SW ready helper — controller না থাকলে wait করে
+window._swReady = async function() {
+  if (!('serviceWorker' in navigator)) return null;
+  const reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => null);
+  if (!reg) return null;
+  // Already active controller আছে?
+  if (navigator.serviceWorker.controller) return navigator.serviceWorker.controller;
+  // Wait for it to become active
+  return new Promise(resolve => {
+    const onCtrl = () => { resolve(navigator.serviceWorker.controller); };
+    navigator.serviceWorker.addEventListener('controllerchange', onCtrl, { once: true });
+    // Timeout fallback — 3s পর null দাও
+    setTimeout(() => resolve(null), 3000);
+  });
+};
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(e => console.warn('SW reg failed:', e));
+  navigator.serviceWorker.addEventListener('message', event => {
+    const { type, id, received, total, done } = event.data;
+    if (type !== 'PROGRESS') return;
+    const bar     = document.getElementById('appDownloadBar');
+    const percent = document.getElementById('appDownloadPercent');
+    const sizeEl  = document.getElementById('appDownloadSize');
+    const label   = document.getElementById('appDownloadLabel');
+    if (total > 0) {
+      const pct = Math.round((received / total) * 100);
+      bar.style.width = pct + '%';
+      percent.textContent = pct + '%';
+      sizeEl.textContent = (received/1024/1024).toFixed(2) + ' / ' + (total/1024/1024).toFixed(2) + ' MB';
+    } else {
+      const mb = (received/1024/1024).toFixed(2);
+      bar.style.width = Math.min((received / 5242880) * 90, 90) + '%';
+      percent.textContent = mb + ' MB';
+      sizeEl.textContent = mb + ' MB downloaded…';
+    }
+    if (done) {
+      bar.style.width = '100%';
+      percent.textContent = '100%';
+      label.textContent = 'Done! ✅';
+      sizeEl.textContent = 'Download complete';
+      const progressWrap = document.getElementById('appDownloadProgressWrap');
+      const btn = document.getElementById('appDetailGetBtn');
+      setTimeout(() => {
+        progressWrap.style.display = 'none';
+        if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+        if (typeof closeModal === 'function') closeModal('appDetailModal');
+      }, 1500);
+    }
+  });
+}
+</script>
+<body>
+
+<div id="headerMount"></div>
+<div id="sidebarBackdrop" class="sidebar-backdrop" onclick="closeSidebar()"></div>
+
+<div class="layout">
+  <div id="sidebarMount"></div>
+
+  <div class="store-layout">
+
+    <!-- ── Fixed Header ── -->
+    <div class="store-header" id="storeHeader">
+      <a class="store-topbar-logo" href="/">
+        <div class="store-topbar-logo-icon">
+          <img src="/img/logo.jpg" width="34" height="34" style="border-radius:9px;display:block;object-fit:cover" alt="logo"/>
+        </div>
+        <span style="font-size:1.15rem;font-weight:900;letter-spacing:-.03em;color:var(--text)">WEVLO</span>
+      </a>
+      <div class="store-search-wrap" id="storeSearchWrap">
+        <span class="store-search-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </span>
+        <input type="text" id="searchInput" placeholder="Search templates..."
+               oninput="handleSearch(this.value)"/>
+      </div>
+      <button class="store-notif-btn" onclick="handleNotifClick()" title="Notifications">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
+        <span class="store-notif-dot"></span>
+      </button>
+      <div class="store-cats" id="categoriesWrap">
+        <button class="store-cat active" onclick="filterCat('All',this)">All</button>
+      </div>
+    </div>
+
+    <!-- ── Scrollable Content ── -->
+    <div class="store-content" id="storeContent">
+
+      <!-- Banner -->
+      <div class="store-banner-wrap">
+        <div class="banner-track" id="bannerTrack">
+          <div class="banner-slide" id="bannerShimmerSlide">
+            <div class="banner-shimmer"></div>
+          </div>
+        </div>
+        <div class="banner-dots" id="bannerDots"><div class="banner-dot active"></div></div>
+      </div>
+
+      <!-- Flash Sale -->
+      <div class="flash-header" id="flashHeader">
+        <div class="flash-title">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          Flash Sale <span class="flash-badge">LIMITED</span>
+        </div>
+        <div class="flash-timer" id="flashTimer">00:00:00</div>
+      </div>
+      <div class="flash-row" id="flashRow"></div>
+
+      <!-- Default store list -->
+      <div id="store-default-view">
+        <div class="store-section-title">
+          <h3>Store</h3>
+          <span id="resultCount"></span>
+        </div>
+        <div class="store-list" id="templatesGrid">
+          <!-- Skeleton -->
+          
+          <div class="skel-row">
+            <div class="skel skel-icon"></div>
+            <div class="skel-lines">
+              <div class="skel skel-line" style="width:65%"></div>
+              <div class="skel skel-line" style="width:40%; height:11px"></div>
+              <div class="skel skel-line" style="width:30%; height:10px"></div>
+            </div>
+            <div class="skel" style="width:60px; height:32px; border-radius:16px"></div>
+          </div>
+          <div class="skel-row">
+            <div class="skel skel-icon"></div>
+            <div class="skel-lines">
+              <div class="skel skel-line" style="width:65%"></div>
+              <div class="skel skel-line" style="width:40%; height:11px"></div>
+              <div class="skel skel-line" style="width:30%; height:10px"></div>
+            </div>
+            <div class="skel" style="width:60px; height:32px; border-radius:16px"></div>
+          </div>
+          <div class="skel-row">
+            <div class="skel skel-icon"></div>
+            <div class="skel-lines">
+              <div class="skel skel-line" style="width:65%"></div>
+              <div class="skel skel-line" style="width:40%; height:11px"></div>
+              <div class="skel skel-line" style="width:30%; height:10px"></div>
+            </div>
+            <div class="skel" style="width:60px; height:32px; border-radius:16px"></div>
+          </div>
+          <div class="skel-row">
+            <div class="skel skel-icon"></div>
+            <div class="skel-lines">
+              <div class="skel skel-line" style="width:65%"></div>
+              <div class="skel skel-line" style="width:40%; height:11px"></div>
+              <div class="skel skel-line" style="width:30%; height:10px"></div>
+            </div>
+            <div class="skel" style="width:60px; height:32px; border-radius:16px"></div>
+          </div>
+          <div class="skel-row">
+            <div class="skel skel-icon"></div>
+            <div class="skel-lines">
+              <div class="skel skel-line" style="width:65%"></div>
+              <div class="skel skel-line" style="width:40%; height:11px"></div>
+              <div class="skel skel-line" style="width:30%; height:10px"></div>
+            </div>
+            <div class="skel" style="width:60px; height:32px; border-radius:16px"></div>
+          </div>
+          <div class="skel-row">
+            <div class="skel skel-icon"></div>
+            <div class="skel-lines">
+              <div class="skel skel-line" style="width:65%"></div>
+              <div class="skel skel-line" style="width:40%; height:11px"></div>
+              <div class="skel skel-line" style="width:30%; height:10px"></div>
+            </div>
+            <div class="skel" style="width:60px; height:32px; border-radius:16px"></div>
+          </div>
+        </div>
+        <!-- Load more -->
+        <div style="text-align:center; padding:16px 0">
+          <button class="btn btn-secondary" id="loadMoreBtn" onclick="loadMore()" style="display:none">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            Load More
+          </button>
+        </div>
+
+        <!-- ── Apps Section ── -->
+        <div id="appsSection" style="margin-top:8px">
+          <div class="store-section-title" style="padding: 0 16px">
+            <h3>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><rect x="2" y="3" width="20" height="14" rx="2"/><polyline points="8 21 12 17 16 21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+              Apps
+            </h3>
+            <span id="appsCount"></span>
+          </div>
+          <div class="store-list" id="appsGrid">
+            <!-- Skeleton -->
+            <div class="skel-row"><div class="skel skel-icon"></div><div class="skel-lines"><div class="skel skel-line" style="width:65%"></div><div class="skel skel-line" style="width:40%;height:11px"></div><div class="skel skel-line" style="width:30%;height:10px"></div></div><div class="skel" style="width:60px;height:32px;border-radius:16px"></div></div>
+            <div class="skel-row"><div class="skel skel-icon"></div><div class="skel-lines"><div class="skel skel-line" style="width:65%"></div><div class="skel skel-line" style="width:40%;height:11px"></div><div class="skel skel-line" style="width:30%;height:10px"></div></div><div class="skel" style="width:60px;height:32px;border-radius:16px"></div></div>
+            <div class="skel-row"><div class="skel skel-icon"></div><div class="skel-lines"><div class="skel skel-line" style="width:65%"></div><div class="skel skel-line" style="width:40%;height:11px"></div><div class="skel skel-line" style="width:30%;height:10px"></div></div><div class="skel" style="width:60px;height:32px;border-radius:16px"></div></div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Search Results -->
+      <div id="store-search-results">
+        <div class="search-result-header">
+          <div id="searchResultLabel">Results</div>
+          <span onclick="clearSearch()">✕ Clear</span>
+        </div>
+        <div class="store-list" id="searchResultList"></div>
+      </div>
+
+    </div><!-- /store-content -->
+  </div><!-- /store-layout -->
+</div><!-- /layout -->
+
+<div id="mobileNavMount"></div>
+
+<!-- ── App Detail Modal ── -->
+<div class="modal-overlay" id="appDetailModal">
+  <div class="modal" style="max-width:460px">
+    <div class="modal-header">
+      <div style="display:flex;align-items:center;gap:12px">
+        <img id="appDetailIcon" src="" alt="" style="width:52px;height:52px;border-radius:12px;object-fit:cover;display:none" onerror="this.style.display='none'"/>
+        <div>
+          <div class="modal-title" id="appDetailTitle">App Name</div>
+          <div style="font-size:12px;color:var(--text-light);margin-top:2px" id="appDetailAuthor">by Developer</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:1px" id="appDetailVersion"></div>
+        </div>
+      </div>
+      <div class="modal-close" onclick="closeModal('appDetailModal')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </div>
+    </div>
+    <div class="modal-body" style="max-height:65vh;overflow-y:auto;padding:16px">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+        <span class="detail-price" id="appDetailPrice">Free</span>
+      </div>
+      <p style="font-size:14px;color:var(--text-light);line-height:1.6;margin:0 0 12px" id="appDetailDesc"></p>
+      <div id="appWhatsNewWrap" style="display:none;background:var(--surface2);border-radius:10px;padding:12px;margin-bottom:12px">
+        <div style="font-size:12px;font-weight:700;color:var(--primary);margin-bottom:4px">What's New</div>
+        <div style="font-size:13px;color:var(--text-light);line-height:1.5" id="appWhatsNew"></div>
+      </div>
+      <div id="appDetailTags" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+    </div>
+    <div class="modal-footer" style="padding:14px 16px;border-top:1px solid var(--border)">
+      <!-- Progress Bar -->
+      <div id="appDownloadProgressWrap" style="display:none;margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <span style="font-size:12px;font-weight:600;color:var(--text)" id="appDownloadLabel">Downloading…</span>
+          <span style="font-size:12px;color:var(--primary);font-weight:700" id="appDownloadPercent">0%</span>
+        </div>
+        <div style="background:var(--surface2);border-radius:99px;height:8px;overflow:hidden">
+          <div id="appDownloadBar" style="height:100%;width:0%;background:linear-gradient(90deg,#4f8ef7,#7c5ef7);border-radius:99px;transition:width 0.2s ease"></div>
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:5px;text-align:center" id="appDownloadSize"></div>
+      </div>
+      <button id="appDetailGetBtn" class="btn btn-primary" style="width:100%;gap:8px;font-size:15px" onclick="handleGetApp()">
+        Download Free
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Payment Modal ── -->
+<div class="modal-overlay" id="paymentModal">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-header">
+      <div class="modal-title">Purchase Template</div>
+      <div class="modal-close" onclick="closeModal('paymentModal')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </div>
+    </div>
+
+    <div class="payment-tabs">
+      <button class="pay-tab active" onclick="switchPayTab('wallet',this)" data-tab="wallet">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+        Wallet
+      </button>
+      <button class="pay-tab" onclick="switchPayTab('bkash',this)" data-tab="bkash">
+        <img src="https://i.ibb.co.com/LD18psjb/20260430-183927.png" alt="bKash" style="width:20px;height:20px;object-fit:contain;vertical-align:middle;"/>
+        bKash
+      </button>
+      <button class="pay-tab" onclick="switchPayTab('nagad',this)" data-tab="nagad">
+        <img src="https://i.ibb.co.com/jkSqJczB/1679248342nagad.png" alt="Nagad" style="width:20px;height:20px;object-fit:contain;vertical-align:middle;"/>
+        Nagad
+      </button>
+    </div>
+
+    <!-- Wallet -->
+    <div class="pay-panel active" id="payWallet">
+      <div class="wallet-balance-card">
+        <div class="lbl">Available Balance</div>
+        <div class="amt" id="walletBalanceAmt">৳0</div>
+      </div>
+      <div class="form-group">
+        <p style="font-size:.875rem;color:var(--text-muted)">
+          Template price: <strong id="templatePriceDisplay">৳0</strong>
+        </p>
+      </div>
+      <button class="btn btn-primary btn-full" id="walletPayBtn" onclick="payWithWallet()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Pay with Wallet
+      </button>
+    </div>
+
+    <!-- bKash -->
+    <div class="pay-panel" id="payBkash">
+      <div class="payment-info bkash-info" onclick="copyPayNumber('bkashNumber')">
+        <div class="pay-method-row">
+          <img src="https://i.ibb.co.com/LD18psjb/20260430-183927.png" alt="bKash" style="width:48px;height:48px;object-fit:contain;"/>
+          <span class="pay-method-label">Send Money to bKash</span>
+        </div>
+        <div class="pay-number" id="bkashNumber">01XXXXXXXXX</div>
+        <div class="pay-copy-hint">👆 Tap to copy number</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Amount</label>
+        <input type="text" class="form-input font-mono" id="bkashAmount" readonly/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Transaction ID (TrxID)</label>
+        <input type="text" class="form-input font-mono" id="bkashTrxId" placeholder="e.g. 9G765KH..." maxlength="15" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()"/>
+        <div class="form-error" id="bkashTrxErr">Transaction ID required</div>
+      </div>
+      <button class="btn btn-primary btn-full pay-verify-btn" id="bkashVerifyBtn" onclick="verifyAndSubmit('bkash')" style="background:#E2136E;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Verify & Pay
+      </button>
+      <div class="pay-status-msg" id="bkashStatusMsg"></div>
+    </div>
+
+    <!-- Nagad -->
+    <div class="pay-panel" id="payNagad">
+      <div class="payment-info nagad-info" onclick="copyPayNumber('nagadNumber')">
+        <div class="pay-method-row">
+          <img src="https://i.ibb.co.com/jkSqJczB/1679248342nagad.png" alt="Nagad" style="width:48px;height:48px;object-fit:contain;"/>
+          <span class="pay-method-label">Send Money to Nagad</span>
+        </div>
+        <div class="pay-number" id="nagadNumber">01XXXXXXXXX</div>
+        <div class="pay-copy-hint">👆 Tap to copy number</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Amount</label>
+        <input type="text" class="form-input font-mono" id="nagadAmount" readonly/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Transaction ID (TrxID)</label>
+        <input type="text" class="form-input font-mono" id="nagadTrxId" placeholder="e.g. 9G765KH..." maxlength="15" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()"/>
+        <div class="form-error" id="nagadTrxErr">Transaction ID required</div>
+      </div>
+      <button class="btn btn-primary btn-full pay-verify-btn" id="nagadVerifyBtn" onclick="verifyAndSubmit('nagad')" style="background:#F6921E;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Verify & Pay
+      </button>
+      <div class="pay-status-msg" id="nagadStatusMsg"></div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="../js/core.js"></script>
+<script>
+document.getElementById('headerMount').innerHTML    = buildHeader('templates');
+document.getElementById('sidebarMount').innerHTML   = buildSidebar('templates');
+document.getElementById('mobileNavMount').innerHTML = buildMobileNav('templates');
+
+let allTemplates = [], filteredTemplates = [], selectedCategory = 'All';
+let currentTemplate = null, bannerIndex = 0, bannerTimer = null;
+let flashCountdown = null, pageSize = 16, currentPage = 1, appConfig = {};
+
+async function init() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const searchQ   = urlParams.get('search');
+  if (searchQ) document.getElementById('searchInput').value = searchQ;
+
+  // Hide notification dot if permission already granted
+  if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+    const dot = document.querySelector('.store-notif-dot');
+    if (dot) dot.style.display = 'none';
+  }
+
+  await Promise.allSettled([loadConfig_(), loadBanners(), loadFlashSale(), loadTemplates(), loadApps()]);
+  if (searchQ) filterTemplates();
+}
+
+async function loadConfig_() {
+  try {
+    const data = await Api.getAppConfig();
+    const cfg  = data?.data || data?.config || {};
+    appConfig  = cfg;
+    if (cfg.bkash_number) document.getElementById('bkashNumber').textContent = cfg.bkash_number;
+    if (cfg.nagad_number) document.getElementById('nagadNumber').textContent = cfg.nagad_number;
+  } catch(e) {}
+}
+
+async function loadBanners() {
+  try {
+    const data = await Api.getBanners();
+    const list = data?.banners || data?.data || [];
+    const track = document.getElementById('bannerTrack');
+    const dots  = document.getElementById('bannerDots');
+    if (!list.length) {
+      // ব্যানার না থাকলে default placeholder দেখাও
+      track.innerHTML = `<div class="banner-slide"><div class="banner-slide-placeholder"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.8)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Premium Templates Marketplace</div></div>`;
+      return;
+    }
+    // shimmer সরিয়ে real banner বসাও
+    track.innerHTML = list.map(b => `
+      <div class="banner-slide" onclick="if('${b.link||''}')window.open('${b.link}','_blank')">
+        <img src="${b.imageUrl||b.image||''}" onerror="imgFallback(this)" alt=""/>
+      </div>`).join('');
+    dots.innerHTML = list.map((_,i) =>
+      `<div class="banner-dot ${i===0?'active':''}" onclick="goSlide(${i})"></div>`).join('');
+    startBannerAuto(list.length);
+  } catch(e) {
+    // error হলে default placeholder
+    const track = document.getElementById('bannerTrack');
+    if (track) track.innerHTML = `<div class="banner-slide"><div class="banner-slide-placeholder"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.8)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Premium Templates Marketplace</div></div>`;
+  }
+}
+function goSlide(i) {
+  const slides = document.querySelectorAll('.banner-slide');
+  if (!slides.length) return;
+  bannerIndex = (i + slides.length) % slides.length;
+  document.getElementById('bannerTrack').style.transform = `translateX(-${bannerIndex*100}%)`;
+  document.querySelectorAll('.banner-dot').forEach((d,j) => d.classList.toggle('active', j===bannerIndex));
+}
+function startBannerAuto(count) {
+  if (count <= 1) return;
+  clearInterval(bannerTimer);
+  bannerTimer = setInterval(() => goSlide(bannerIndex + 1), 3500);
+}
+
+async function loadFlashSale() {
+  try {
+    const cfg = await Api.getFlashSaleConfig();
+    if (!cfg?.data?.active) return;
+    let endMs = cfg.data.endTime;
+    if (endMs < 1e12) endMs = endMs * 1000; // unix seconds → ms
+    const remaining = endMs - Date.now();
+    if (remaining <= 0) return;
+    startFlashTimer(endMs);
+    const items = await Api.getFlashSaleItems();
+    const list  = items?.data || items?.items || [];
+    if (!list.length) return;
+    document.getElementById('flashHeader').style.display = 'flex';
+    document.getElementById('flashRow').style.display    = 'flex';
+    document.getElementById('flashRow').innerHTML = list.map(t => `
+      <div class="flash-card" onclick='openDetail(${JSON.stringify(t).replace(/'/g,"&#39;")})'>
+        <div class="flash-thumb"><img src="${t.imageUrl||''}" onerror="imgFallback(this)" alt=""/></div>
+        <div class="flash-body">
+          <div class="flash-name">${t.name}</div>
+          <div class="flash-price-row">
+            <span class="flash-new-price">৳${t.salePrice||t.price}</span>
+            ${t.oldPrice ? `<span class="flash-old-price">৳${t.oldPrice}</span>` : ''}
+            ${t.discountPercent ? `<span class="flash-discount">-${t.discountPercent}%</span>` : ''}
+          </div>
+        </div>
+      </div>`).join('');
+  } catch(e) { console.warn('Flash sale load error:', e); }
+}
+function startFlashTimer(endTimeMs) {
+  clearInterval(flashCountdown);
+  const el = document.getElementById('flashTimer');
+  function tick() {
+    const ms = endTimeMs - Date.now();
+    if (ms <= 0) {
+      clearInterval(flashCountdown);
+      el.textContent = '00:00:00';
+      document.getElementById('flashHeader').style.display = 'none';
+      document.getElementById('flashRow').style.display    = 'none';
+      return;
+    }
+    const h = Math.floor(ms / 3600000);
+    const m = Math.floor((ms % 3600000) / 60000);
+    const s = Math.floor((ms % 60000) / 1000);
+    el.textContent = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  }
+  tick();
+  flashCountdown = setInterval(tick, 1000);
+}
+
+/* ── Notification Functions ── */
+async function requestNotificationPermission() {
+  if (!('Notification' in window)) {
+    alert('এই browser-এ Notification সাপোর্ট নেই।');
+    return false;
+  }
+  if (Notification.permission === 'granted') return true;
+  if (Notification.permission === 'denied') {
+    alert('Notification blocked আছে। Browser settings থেকে allow করুন।');
+    return false;
+  }
+  const perm = await Notification.requestPermission();
+  return perm === 'granted';
+}
+
+function showNotification(title, body, icon) {
+  if (Notification.permission !== 'granted') return;
+  const n = new Notification(title, {
+    body: body || '',
+    icon: icon || '/favicon.ico',
+    badge: icon || '/favicon.ico',
+    tag: 'wevlo-notif',
+    renotify: true,
+  });
+  n.onclick = () => { window.focus(); n.close(); };
+}
+
+async function handleNotifClick() {
+  const granted = await requestNotificationPermission();
+  const dot = document.querySelector('.store-notif-dot');
+  if (granted) {
+    if (dot) dot.style.display = 'none';
+    showNotification('WEVLO Notifications', 'Notification চালু হয়েছে! নতুন template ও offer এর আপডেট পাবেন।', '/favicon.ico');
+  }
+}
+
+async function loadTemplates() {
+  try {
+    const data = await Api.getTemplates();
+    allTemplates = data?.templates || data?.data || [];
+    const cats = ['All', ...new Set(allTemplates.map(t => t.category).filter(Boolean))];
+    document.getElementById('categoriesWrap').innerHTML = cats.map((c,i) =>
+      `<button class="store-cat ${i===0?'active':''}" onclick="filterCat('${c}',this)">${c}</button>`
+    ).join('');
+    filteredTemplates = [...allTemplates];
+    renderTemplates();
+  } catch(e) {
+    document.getElementById('templatesGrid').innerHTML = `<div class="store-empty">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <h3>Failed to load</h3><p>Please check your connection and try again.</p>
+      <button class="btn btn-primary" style="margin-top:12px" onclick="loadTemplates()">Retry</button></div>`;
+  }
+}
+
+function filterCat(cat, el) {
+  selectedCategory = cat;
+  document.querySelectorAll('.store-cat').forEach(b => b.classList.remove('active'));
+  el?.classList.add('active');
+  clearSearch();
+  filterTemplates();
+}
+function filterTemplates(searchVal) {
+  const q     = (searchVal ?? document.getElementById('searchInput').value).toLowerCase();
+  const price = document.getElementById('priceFilter').value;
+  const sort  = document.getElementById('sortFilter').value;
+  filteredTemplates = allTemplates.filter(t => {
+    const matchCat    = selectedCategory==='All' || t.category===selectedCategory;
+    const matchSearch = !q || (t.name||'').toLowerCase().includes(q) || (t.description||'').toLowerCase().includes(q);
+    const isFree      = !t.price || t.price==='0' || t.price==='Free';
+    const matchPrice  = price==='all' || (price==='free'&&isFree) || (price==='paid'&&!isFree);
+    return matchCat && matchSearch && matchPrice;
+  });
+  if (sort==='popular')    filteredTemplates.sort((a,b)=>(parseInt(b.downloadCount)||0)-(parseInt(a.downloadCount)||0));
+  if (sort==='price_low')  filteredTemplates.sort((a,b)=>(parseFloat(a.price)||0)-(parseFloat(b.price)||0));
+  if (sort==='price_high') filteredTemplates.sort((a,b)=>(parseFloat(b.price)||0)-(parseFloat(a.price)||0));
+  currentPage = 1;
+  renderTemplates();
+}
+
+function renderTemplates() {
+  const grid = document.getElementById('templatesGrid');
+  const page = filteredTemplates.slice(0, currentPage * pageSize);
+  const hasMore = filteredTemplates.length > page.length;
+  const countEl = document.getElementById('resultCount');
+  if(countEl) countEl.textContent = filteredTemplates.length + ' found';
+  document.getElementById('loadMoreBtn').style.display = hasMore ? 'inline-flex' : 'none';
+
+  if (!page.length) {
+    grid.innerHTML = `<div class="store-empty">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <h3>No templates found</h3><p>Try a different category or keyword.</p></div>`;
+    return;
+  }
+  grid.innerHTML = page.map(t => {
+    const isFree = !t.price || t.price==='0' || t.price==='Free';
+    const tJson  = JSON.stringify(t).replace(/'/g,"&#39;");
+    const iconEl = (t.imageUrl||t.iconUrl||t.logo||'').startsWith('http')
+      ? `<img src="${t.imageUrl||t.iconUrl||t.logo}" class="store-app-icon" onerror="imgFallback(this)" loading="lazy"/>`
+      : `<div class="store-app-icon-placeholder">${(t.name||'T')[0]}</div>`;
+    const stars = '★'.repeat(Math.round(t.rating||4)) + '☆'.repeat(5-Math.round(t.rating||4));
+    return `
+    <div class="store-app-row" onclick='openDetail(${tJson})'>
+      ${iconEl}
+      <div class="store-app-info">
+        <div class="store-app-name">${t.name}</div>
+        <div class="store-app-cat">${t.category||'Template'}</div>
+        <div class="store-app-rating">${stars} &nbsp;${t.downloadCount||0} downloads</div>
+      </div>
+      <button class="get-btn ${isFree?'free-tag':(hasPurchased(t.id)?'free-tag':'paid-tag')}" onclick="event.stopPropagation();quickGet(${tJson})">
+        ${isFree ? 'Free' : (hasPurchased(t.id) ? '✓ Owned' : '৳'+t.price)}
+      </button>
+    </div>`;
+  }).join('');
+}
+
+function loadMore() { currentPage++; renderTemplates(); }
+
+function openDetail(t) {
+  if (typeof t === 'string') t = JSON.parse(t);
+  currentTemplate = t;
+  const isFree = !t.price || t.price==='0' || t.price==='Free';
+
+  // আইকন / preview ছবি
+  const iconEl = document.getElementById('appDetailIcon');
+  const imgSrc = t.imageUrl || t.iconUrl || '';
+  if (imgSrc) { iconEl.src = imgSrc; iconEl.style.display = 'block'; }
+  else         { iconEl.style.display = 'none'; }
+
+  document.getElementById('appDetailTitle').textContent  = t.name || '';
+  document.getElementById('appDetailAuthor').textContent = 'by ' + (t.author || 'Wevlo');
+  document.getElementById('appDetailDesc').textContent   = t.fullDescription || t.description || '';
+
+  // price
+  const priceEl = document.getElementById('appDetailPrice');
+  priceEl.textContent = isFree ? 'Free' : '৳' + t.price;
+  priceEl.className   = 'detail-price' + (isFree ? ' free' : '');
+
+  // version → category দেখাই
+  const verEl = document.getElementById('appDetailVersion');
+  if (verEl) verEl.textContent = t.category ? '📁 ' + t.category : '';
+
+  // whats new → tags দেখাই
+  const tagsEl   = document.getElementById('appDetailTags');
+  const wrapEl   = document.getElementById('appWhatsNewWrap');
+  const newEl    = document.getElementById('appWhatsNew');
+  if (tagsEl) tagsEl.innerHTML = (t.tags||[]).map(tag => `<span class="detail-tag">${tag}</span>`).join('');
+  if (wrapEl && newEl && t.whatsNew) {
+    newEl.textContent = t.whatsNew;
+    wrapEl.style.display = 'block';
+  } else if (wrapEl) { wrapEl.style.display = 'none'; }
+
+  // Get / Buy button — check if already purchased
+  const getBtn = document.getElementById('appDetailGetBtn');
+  getBtn.onclick = handleGetTemplate;
+  getBtn.disabled = false;
+  const alreadyBought = !isFree && hasPurchased(t.id);
+  if (alreadyBought) {
+    getBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Import (Already Purchased)`;
+    getBtn.style.background = '#2e7d32';
+  } else {
+    getBtn.style.background = '';
+    getBtn.innerHTML = isFree
+      ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Import Free`
+      : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg> Buy ৳${t.price}`;
+  }
+
+  document.getElementById('appDetailModal').classList.add('open');
+}
+
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function previewTemplate(id) { const t = allTemplates.find(x=>x.id===id); if (t?.filePath) window.open(t.filePath,'_blank'); }
+function previewFullscreen() { if (currentTemplate?.filePath) window.open(currentTemplate.filePath,'_blank'); }
+function quickGet(t) { if (typeof t==='string') t=JSON.parse(t); currentTemplate=t; handleGetTemplate(); }
+
+async function handleGetTemplate() {
+  if (!Session.isLoggedIn()) { showToast('Login required','warning'); setTimeout(Nav.login,1000); return; }
+  const t = currentTemplate;
+  const isFree = !t.price || t.price==='0' || t.price==='Free';
+  // Already purchased → direct import, no payment needed
+  if (!isFree && hasPurchased(t.id)) {
+    await importTemplate(t);
+    return;
+  }
+  if (isFree) { await importTemplate(t); }
+  else { closeModal('appDetailModal'); openPaymentModal(t); }
+}
+
+async function importTemplate(t) {
+  const btn = document.getElementById('appDetailGetBtn');
+  btn.disabled = true; btn.textContent = 'Importing…';
+  try {
+    await Api.saveDownload(t);
+    btn.textContent = 'Downloading…';
+    const result = await Api.getTemplateFiles(t.id);
+
+    let files = {};
+    if (result?.status === 'success' && result?.files && Object.keys(result.files).length > 0) {
+      files = result.files;
+    } else {
+      files['index.html'] = `<!DOCTYPE html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8"/>\n  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>\n  <title>${t.name}</title>\n</head>\n<body>\n  <h1>${t.name}</h1>\n</body>\n</html>`;
+    }
+
+    // ── Project IndexedDB-তে save ──
+    const projects = await WevloDB.getProjects();
+    const p = {
+      id: 'p_' + Date.now(), name: t.name, type: 'template',
+      icon: t.imageUrl || t.iconUrl || '', templateId: t.id, filePath: t.filePath,
+      createdAt: Date.now(), updatedAt: Date.now(),
+      files
+    };
+    projects.unshift(p);
+    await WevloDB.setProjects(projects);
+
+    // ── ZIP বানিয়ে Downloads-এ save ──
+    btn.textContent = 'Saving…';
+    try {
+      const zip = new JSZip();
+      const folder = zip.folder(t.name.replace(/[^a-zA-Z0-9_\-]/g, '_'));
+      for (const [name, content] of Object.entries(files)) {
+        folder.file(name, content);
+      }
+      const blob = await zip.generateAsync({ type: 'blob' });
+      const fileName = t.name.replace(/[^a-zA-Z0-9_\-]/g, '_') + '.zip';
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = blobUrl; a.download = fileName;
+      a.style.display = 'none';
+      document.body.appendChild(a); a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
+      _importedFileName = fileName;
+    } catch(zipErr) {
+      console.warn('ZIP save failed:', zipErr);
+      _importedFileName = null;
+    }
+
+    closeModal('appDetailModal');
+    _importedProjectId = p.id;
+    document.getElementById('importSuccessTitle').textContent = '🎉 ' + t.name + ' Imported!';
+    document.getElementById('importSuccessMsg').textContent   = 'Template সফলভাবে import হয়েছে। ফাইলটি Downloads folder-এ save হয়েছে।';
+    document.getElementById('importSuccessModal').classList.add('open');
+  } catch(e) {
+    console.error('importTemplate error:', e);
+    showToast('Import failed.', 'error');
+  } finally {
+    btn.disabled = false;
+    const isFreeT = !currentTemplate?.price || currentTemplate?.price === '0' || currentTemplate?.price === 'Free';
+    btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> ${isFreeT ? 'Import Free' : 'Buy ৳'+(currentTemplate?.price||'')}`;
+  }
+}
+
+function openPaymentModal(t) {
+  document.getElementById('templatePriceDisplay').textContent = '৳' + t.price;
+  document.getElementById('walletBalanceAmt').textContent     = '৳' + Session.getWallet();
+  document.getElementById('bkashAmount').value = t.price;
+  document.getElementById('nagadAmount').value = t.price;
+
+  // Template-এর নিজস্ব bkashNumber/nagadNumber, না হলে global config fallback
+  const globalBkash = appConfig.bkash_number || appConfig.bkashNumber || '01XXXXXXXXX';
+  const globalNagad = appConfig.nagad_number || appConfig.nagadNumber || '01XXXXXXXXX';
+  document.getElementById('bkashNumber').textContent = t.bkashNumber || globalBkash;
+  document.getElementById('nagadNumber').textContent = t.nagadNumber || globalNagad;
+
+  document.getElementById('paymentModal').classList.add('open');
+}
+function switchPayTab(tab, el) {
+  document.querySelectorAll('.pay-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.pay-panel').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('pay'+tab.charAt(0).toUpperCase()+tab.slice(1)).classList.add('active');
+}
+async function payWithWallet() {
+  // currentApp (Apps section) অথবা currentTemplate (Templates section) যেটা active সেটা নাও
+  const t = _activeItem();
+  if (!t) { showToast('Item not found','error'); return; }
+  const bal = parseFloat(Session.getWallet()||0);
+  if (bal < parseFloat(t.price)) { showToast('Insufficient balance','error'); return; }
+  const btn = document.getElementById('walletPayBtn');
+  btn.disabled = true; btn.textContent = 'Processing…';
+  try {
+    const res = await Api.buyWithWallet(t.id, t.name, t.price);
+    if (res.status==='success') {
+      // Server থেকে newBalance পেলে সেটা সেট করো, নইলে locally মাইনাস করো
+      const newBal = (res.newBalance !== undefined && res.newBalance !== null)
+        ? res.newBalance
+        : (bal - parseFloat(t.price));
+      Session.setWallet(String(newBal));
+      savePurchaseRecord(t.id);
+      closeModal('paymentModal');
+      // App কিনলে download, Template কিনলে import
+      if (currentApp && currentApp.id === t.id) {
+        await _downloadApp(t);
+      } else {
+        await importTemplate(t);
+      }
+    } else { showToast(res.message||'Payment failed','error'); }
+  } catch(e) { console.error('payWithWallet error:', e); showToast('Payment failed.','error'); }
+  finally { btn.disabled=false; btn.textContent='Pay with Wallet'; }
+}
+
+// Helper: currently active purchase item (App or Template)
+function _activeItem() {
+  if (currentApp && (!currentTemplate || currentApp._lastOpened >= (currentTemplate._lastOpened||0))) return currentApp;
+  return currentTemplate;
+}
+// ── Payment auto-verify config ──
+const PAY_SCRIPT_URL  = "https://script.google.com/macros/s/AKfycbygDTGvbG7sUTPAt2lO2iMsPHprZRlP7WjAwq4n4Q3D1SZduenpNPUaayf_c2VsTqC0Xw/exec";
+const PAY_API_KEY     = "KEY_26NKYEVDP_1770263198111";
+
+function copyPayNumber(id) {
+  const num = document.getElementById(id)?.textContent?.trim();
+  if (!num || num.includes('X')) return;
+  navigator.clipboard.writeText(num).then(() => showToast('Number copied!', 'success'));
+}
+
+async function verifyAndSubmit(method) {
+  const t      = _activeItem();
+  const trxEl  = document.getElementById(method + 'TrxId');
+  const errEl  = document.getElementById(method + 'TrxErr');
+  const btn    = document.getElementById(method + 'VerifyBtn');
+  const msgEl  = document.getElementById(method + 'StatusMsg');
+  const trxId  = trxEl.value.trim().toUpperCase();
+
+  if (!trxId || trxId.length < 5) { errEl.classList.add('show'); return; }
+  errEl.classList.remove('show');
+
+  // Loading state
+  btn.disabled = true;
+  btn.innerHTML = `<span class="pay-spin"></span> Verifying…`;
+  msgEl.className = 'pay-status-msg loading';
+  msgEl.textContent = '⏳ Checking transaction…';
+
+  const url = `${PAY_SCRIPT_URL}?trxID=${trxId}&apiKey=${PAY_API_KEY}&amount=${t.price}`;
+
+  try {
+    const res  = await fetch(url);
+    const data = await res.json();
+
+    if (data.status === 'success') {
+      msgEl.className = 'pay-status-msg success';
+      msgEl.innerHTML = `✅ Payment verified!<br>Amount: ৳${data.amount} | TrxID: ${data.trxID}`;
+      btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Verified!`;
+
+      // Submit to backend & save purchase record locally
+      await Api.submitPayment(t.id, trxId, method, t.price);
+      savePurchaseRecord(t.id);
+      setTimeout(async () => {
+        closeModal('paymentModal');
+        if (currentApp && currentApp.id === t.id) {
+          showToast('Payment verified! Downloading… 🎉', 'success');
+          await _downloadApp(t);
+        } else {
+          showToast('Payment verified! Importing template… 🎉', 'success');
+          await importTemplate(t);
+        }
+      }, 1500);
+
+    } else {
+      // Auto-verify failed — fallback to manual submit
+      msgEl.className = 'pay-status-msg error';
+      msgEl.innerHTML = `⚠️ ${data.message || 'Auto-verify failed.'}<br><small>Submitting for manual review…</small>`;
+      await Api.submitPayment(t.id, trxId, method, t.price);
+      savePurchaseRecord(t.id);
+      setTimeout(() => {
+        closeModal('paymentModal');
+        showToast('Payment submitted! Admin will approve soon.', 'success');
+      }, 2000);
+    }
+  } catch (e) {
+    // Network error — fallback to manual
+    try {
+      await Api.submitPayment(t.id, trxId, method, t.price);
+      savePurchaseRecord(t.id);
+      msgEl.className = 'pay-status-msg error';
+      msgEl.innerHTML = `⚠️ Auto-verify unavailable. Submitted for manual review.`;
+      setTimeout(() => {
+        closeModal('paymentModal');
+        showToast('Payment submitted! Admin will approve soon.', 'success');
+      }, 2000);
+    } catch(e2) {
+      msgEl.className = 'pay-status-msg error';
+      msgEl.textContent = '❌ Submission failed. Please try again.';
+    }
+  } finally {
+    btn.disabled = false;
+    if (!btn.textContent.includes('Verified')) {
+      const icon = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+      btn.innerHTML = `${icon} Verify & Pay`;
+    }
+  }
+}
+
+async function submitPayment(method) {
+  return verifyAndSubmit(method);
+}
+// ── Purchase Record helpers ──
+function savePurchaseRecord(templateId) {
+  try {
+    const key = 'wevlo_purchased_' + (Session.getUserId() || 'guest');
+    const purchased = JSON.parse(localStorage.getItem(key) || '[]');
+    if (!purchased.includes(String(templateId))) {
+      purchased.push(String(templateId));
+      localStorage.setItem(key, JSON.stringify(purchased));
+    }
+  } catch(e) {}
+}
+
+function hasPurchased(templateId) {
+  try {
+    const key = 'wevlo_purchased_' + (Session.getUserId() || 'guest');
+    const purchased = JSON.parse(localStorage.getItem(key) || '[]');
+    return purchased.includes(String(templateId));
+  } catch(e) { return false; }
+}
+
+
+
+
+
+// ── Import Success Modal ──
+</script>
+
+<!-- Import Success Modal -->
+<div class="modal-overlay" id="importSuccessModal">
+  <div class="modal" style="max-width:380px;text-align:center">
+    <div class="modal-body" style="padding:28px 24px 8px">
+      <div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#22c55e,#16a34a);display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <div style="font-size:18px;font-weight:800;color:var(--text-main);margin-bottom:8px" id="importSuccessTitle">Imported!</div>
+      <div style="font-size:13px;color:var(--text-muted);line-height:1.5" id="importSuccessMsg">Template সফলভাবে import হয়েছে।</div>
+    </div>
+    <div class="modal-footer" style="padding:16px 20px 20px;display:flex;flex-direction:column;gap:10px;border:none">
+      <button class="btn btn-primary" style="width:100%;gap:8px" id="importSuccessEditorBtn" onclick="openImportedProject()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+        Open Editor
+      </button>
+      <button class="btn btn-secondary" style="width:100%;gap:8px" onclick="openPhoneFileManager()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        Open File Manager
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+let _importedProjectId = null;
+let _importedFileName  = null;
+
+function openImportedProject() {
+  closeModal('importSuccessModal');
+  if (_importedProjectId) Nav.editor(_importedProjectId);
+}
+
+function openPhoneFileManager() {
+  closeModal('importSuccessModal');
+  // Android file manager intent — content URI দিয়ে Downloads folder খোলো
+  const tried = [
+    'content://com.android.externalstorage.documents/root/primary',
+    'content://com.android.providers.downloads.documents/root/',
+  ];
+  // intent: scheme Android Chrome-এ file manager খোলে
+  const intentUrl = 'intent://com.android.documentsui/#Intent;scheme=content;action=android.intent.action.VIEW;type=*%2F*;end';
+  // Fallback chain: intent → files:// → about:blank
+  const a = document.createElement('a');
+  a.href = intentUrl;
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  try { a.click(); } catch(e) {}
+  document.body.removeChild(a);
+
+  // Android Chrome-এ intent scheme কাজ না করলে Downloads page ওপেন করো
+  setTimeout(() => {
+    try {
+      window.open('content://downloads/all_downloads', '_blank');
+    } catch(e) {}
+  }, 500);
+}
+
+['paymentModal','appDetailModal'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('click', function(e) {
+    if (e.target===this) closeModal(id);
+  });
+});
+
+function handleSearch(val) {
+  const q = val.trim().toLowerCase();
+  if (q.length === 0) { clearSearch(); return; }
+  document.querySelectorAll('.store-cat').forEach(b => b.classList.remove('active'));
+  document.getElementById('store-default-view').style.display = 'none';
+  document.getElementById('store-search-results').style.display = 'block';
+  document.getElementById('searchResultLabel').textContent = 'Results for "' + val.trim() + '"';
+  const results = allTemplates.filter(t =>
+    (t.name||'').toLowerCase().includes(q) ||
+    (t.category||'').toLowerCase().includes(q) ||
+    (t.description||'').toLowerCase().includes(q)
+  );
+  const listEl = document.getElementById('searchResultList');
+  if (!results.length) {
+    listEl.innerHTML = `<div class="store-empty"><h3>No results found</h3><p>Try a different keyword or browse all categories.</p></div>`;
+    return;
+  }
+  listEl.innerHTML = results.map(t => {
+    const isFree = !t.price || t.price==='0' || t.price==='Free';
+    const tJson  = JSON.stringify(t).replace(/'/g,"&#39;");
+    const iconEl = (t.imageUrl||t.iconUrl||t.logo||'').startsWith('http')
+      ? `<img src="${t.imageUrl||t.iconUrl||t.logo}" class="store-app-icon" onerror="imgFallback(this)" loading="lazy"/>`
+      : `<div class="store-app-icon-placeholder">${(t.name||'T')[0]}</div>`;
+    const stars = '★'.repeat(Math.round(t.rating||4)) + '☆'.repeat(5-Math.round(t.rating||4));
+    return `<div class="store-app-row" onclick='openDetail(${tJson})'>
+      ${iconEl}
+      <div class="store-app-info">
+        <div class="store-app-name">${t.name}</div>
+        <div class="store-app-cat">${t.category||'Template'}</div>
+        <div class="store-app-rating">${stars}</div>
+      </div>
+      <button class="get-btn ${isFree?'free-tag':'paid-tag'}" onclick="event.stopPropagation();quickGet(${tJson})">
+        ${isFree ? 'Free' : '৳'+t.price}
+      </button>
+    </div>`;
+  }).join('');
+}
+
+function clearSearch() {
+  document.getElementById('searchInput').value = '';
+  document.getElementById('store-default-view').style.display = 'block';
+  document.getElementById('store-search-results').style.display = 'none';
+  document.querySelectorAll('.store-cat').forEach((b,i) => b.classList.toggle('active', i===0));
+  selectedCategory = 'All';
+  filterTemplates();
+}
+
+// ════════════════════════════════════════════════════════
+// APPS SECTION
+// ════════════════════════════════════════════════════════
+
+let allApps = [];
+let currentApp = null;
+
+async function loadApps() {
+  try {
+    const data = await Api.getApps();
+    allApps = data?.apps || data?.data || [];
+    const grid = document.getElementById('appsGrid');
+    const countEl = document.getElementById('appsCount');
+    if (!allApps.length) {
+      if (grid) grid.innerHTML = '';
+      document.getElementById('appsSection').style.display = 'none';
+      return;
+    }
+    if (countEl) countEl.textContent = allApps.length + ' available';
+    renderApps(allApps, grid);
+  } catch(e) {
+    const grid = document.getElementById('appsGrid');
+    if (grid) grid.innerHTML = `<div class="store-empty">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <p>Could not load apps.</p>
+      <button class="btn btn-primary" style="margin-top:8px" onclick="loadApps()">Retry</button></div>`;
+  }
+}
+
+function renderApps(apps, container) {
+  if (!container) return;
+  container.innerHTML = apps.map(app => {
+    const isFree = !app.price || app.price === '0' || app.price === 'Free' || app.price === '';
+    const aJson  = JSON.stringify(app).replace(/'/g, "&#39;");
+    const iconEl = (app.iconUrl || '').startsWith('http')
+      ? `<img src="${app.iconUrl}" class="store-app-icon" onerror="imgFallback(this)" loading="lazy" style="border-radius:12px"/>`
+      : `<div class="store-app-icon-placeholder" style="border-radius:12px">${(app.name || 'A')[0]}</div>`;
+    const stars = '★'.repeat(Math.round(parseFloat(app.rating) || 4)) +
+                  '☆'.repeat(5 - Math.round(parseFloat(app.rating) || 4));
+    return `
+    <div class="store-app-row" onclick='openAppDetail(${aJson})'>
+      ${iconEl}
+      <div class="store-app-info">
+        <div class="store-app-name">${app.name}</div>
+        <div class="store-app-cat">${app.category || 'App'} ${app.version ? '· v' + app.version : ''}</div>
+        <div class="store-app-rating">${stars} &nbsp;${app.downloadCount || 0} downloads</div>
+      </div>
+      <button class="get-btn ${isFree ? 'free-tag' : 'paid-tag'}"
+        onclick="event.stopPropagation();quickGetApp(${aJson})">
+        ${isFree ? 'Free' : '৳' + app.price}
+      </button>
+    </div>`;
+  }).join('');
+}
+
+function openAppDetail(app) {
+  if (typeof app === 'string') app = JSON.parse(app);
+  currentApp = app;
+  const isFree = !app.price || app.price === '0' || app.price === 'Free' || app.price === '';
+
+  document.getElementById('appDetailTitle').textContent    = app.name;
+  document.getElementById('appDetailAuthor').textContent   = 'by ' + (app.developer || 'Wevlo');
+  document.getElementById('appDetailVersion').textContent  = app.version ? 'v' + app.version : '';
+  document.getElementById('appDetailDesc').textContent     = app.fullDescription || app.description || '';
+  document.getElementById('appDetailPrice').textContent    = isFree ? 'Free' : '৳' + app.price;
+  document.getElementById('appDetailPrice').className      = 'detail-price ' + (isFree ? 'free' : '');
+
+  const iconEl = document.getElementById('appDetailIcon');
+  if ((app.iconUrl || '').startsWith('http')) {
+    iconEl.src = app.iconUrl;
+    iconEl.style.display = 'block';
+  } else {
+    iconEl.style.display = 'none';
+  }
+
+  const whatsNewWrap = document.getElementById('appWhatsNewWrap');
+  if (app.whatsNew) {
+    whatsNewWrap.style.display = 'block';
+    document.getElementById('appWhatsNew').textContent = app.whatsNew;
+  } else {
+    whatsNewWrap.style.display = 'none';
+  }
+
+  document.getElementById('appDetailTags').innerHTML = (app.tags || [])
+    .map(tag => `<span class="detail-tag">${tag}</span>`).join('');
+
+  const getBtn = document.getElementById('appDetailGetBtn');
+  getBtn.innerHTML = isFree
+    ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download Free`
+    : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg> Buy ৳${app.price}`;
+
+  document.getElementById('appDetailModal').classList.add('open');
+}
+
+function quickGetApp(app) {
+  if (typeof app === 'string') app = JSON.parse(app);
+  currentApp = app;
+  handleGetApp();
+}
+
+async function handleGetApp() {
+  const app = currentApp;
+  const isFree = !app.price || app.price === '0' || app.price === 'Free' || app.price === '';
+
+  if (isFree) {
+    if (!app.downloadUrl) { showToast('Download link not available.', 'error'); return; }
+    await _downloadApp(app);
+  } else {
+    closeModal('appDetailModal');
+    currentApp._lastOpened = Date.now();
+    openPaymentModal(app);
+  }
+}
+
+// ── Shared download logic (free + paid app) ──
+async function _downloadApp(app) {
+  const btn          = document.getElementById('appDetailGetBtn');
+  const progressWrap = document.getElementById('appDownloadProgressWrap');
+  const bar          = document.getElementById('appDownloadBar');
+  const percent      = document.getElementById('appDownloadPercent');
+  const label        = document.getElementById('appDownloadLabel');
+  const sizeEl       = document.getElementById('appDownloadSize');
+
+  btn.disabled = true; btn.style.opacity = '0.5';
+  progressWrap.style.display = 'block';
+  label.textContent = 'Downloading…';
+  bar.style.width = '0%'; percent.textContent = '0%';
+  sizeEl.textContent = 'Connecting to server…';
+
+  try {
+    // Extension detect করো
+    const urlPath = app.downloadUrl.split('?')[0];
+    const urlExt  = urlPath.split('.').pop().toLowerCase();
+    const ext      = ['apk','zip','pdf','exe'].includes(urlExt) ? '.' + urlExt : '.apk';
+    const fileName = app.name.replace(/[^a-zA-Z0-9_\-]/g, '_') + ext;
+
+    // ── Fetch করে Blob বানাও (Android Chrome-এ file manager-এ save হয়) ──
+    const response = await fetch(app.downloadUrl, { cache: 'no-store' });
+    if (!response.ok) throw new Error('Server error ' + response.status);
+
+    const contentLength = response.headers.get('Content-Length');
+    const total = contentLength ? parseInt(contentLength) : 0;
+    const reader = response.body.getReader();
+    const chunks = [];
+    let received = 0;
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      chunks.push(value);
+      received += value.length;
+      if (total) {
+        const pct = Math.round((received / total) * 100);
+        bar.style.width = pct + '%'; percent.textContent = pct + '%';
+        sizeEl.textContent = (received/1024/1024).toFixed(2) + ' / ' + (total/1024/1024).toFixed(2) + ' MB';
+      } else {
+        bar.style.width = Math.min((received/5242880)*90, 90) + '%';
+        percent.textContent = (received/1024/1024).toFixed(2) + ' MB';
+        sizeEl.textContent = (received/1024/1024).toFixed(2) + ' MB downloaded…';
+      }
+    }
+
+    // Blob থেকে download করো → Android file manager-এ save হয়
+    const blob = new Blob(chunks);
+    const blobUrl = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = blobUrl; a.download = fileName;
+    a.style.display = 'none';
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
+
+    bar.style.width = '100%'; percent.textContent = '100%';
+    label.textContent = 'Done! ✅'; sizeEl.textContent = 'Download complete';
+
+    try { await Api._post('incrementAppDownload', { appId: app.id }); } catch(e) {}
+
+    setTimeout(() => {
+      progressWrap.style.display = 'none';
+      btn.disabled = false; btn.style.opacity = '1';
+      closeModal('appDetailModal');
+    }, 1500);
+
+  } catch(err) {
+    console.error('_downloadApp error:', err);
+    progressWrap.style.display = 'none';
+    btn.disabled = false; btn.style.opacity = '1';
+    showToast('Download failed: ' + (err.message || 'Try again.'), 'error');
+  }
+}
+
+init();
+</script>
+<script src="../js/code.js"></script>
+</body>
+</html>

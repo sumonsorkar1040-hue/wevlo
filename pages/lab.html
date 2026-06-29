@@ -1,0 +1,1233 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Wevlo — Lab</title>
+<link rel="stylesheet" href="../css/style.css"/>
+<style>
+/* ── Lab header search+filter in global header ── */
+.lab-header-search-wrap {
+  position: relative;
+  flex: 1;
+  max-width: 300px;
+}
+.lab-header-search-wrap .search-icon {
+  position: absolute; left: 12px; top: 50%;
+  transform: translateY(-50%);
+  color: #8b5cf6; pointer-events: none;
+  display: flex; align-items: center;
+}
+.lab-header-search-wrap input {
+  width: 100%;
+  padding: 8px 36px 8px 36px;
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: 50px;
+  font-size: .825rem; color: var(--text);
+  font-family: var(--font);
+  transition: border-color .2s, box-shadow .2s;
+  outline: none;
+}
+.lab-header-search-wrap input:focus {
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 3px rgba(124,58,237,.12);
+  background: var(--surface);
+}
+.lab-header-search-wrap input::placeholder { color: var(--text-light); }
+.lab-header-search-wrap .search-clear {
+  position: absolute; right: 12px; top: 50%;
+  transform: translateY(-50%); color: var(--text-light);
+  cursor: pointer; display: none; background: none;
+  border: none; padding: 0; line-height: 1;
+}
+.lab-header-search-wrap input:not(:placeholder-shown) ~ .search-clear { display: flex; }
+
+/* Filter icon button */
+.lab-filter-btn {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; flex-shrink: 0;
+  transition: all .2s; color: var(--text-muted);
+  position: relative;
+}
+.lab-filter-btn:hover { border-color: #7c3aed; color: #7c3aed; background: #f5f3ff; }
+.lab-filter-btn.active { border-color: #7c3aed; color: #7c3aed; background: #ede9fe; }
+
+/* Filter dropdown */
+.lab-filter-dropdown {
+  position: absolute; top: calc(100% + 8px); right: 0;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  padding: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.12);
+  z-index: 200;
+  min-width: 170px;
+  display: none;
+}
+.lab-filter-dropdown.open { display: block; }
+.filter-option {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: 10px;
+  cursor: pointer; font-size: .83rem; font-weight: 600;
+  color: var(--text-muted); transition: all .15s;
+  border: none; background: none; width: 100%;
+  font-family: var(--font);
+}
+.filter-option:hover { background: var(--surface2); color: var(--text); }
+.filter-option.selected { background: #ede9fe; color: #7c3aed; }
+.filter-option-icon { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: .9rem; flex-shrink: 0; }
+
+/* ── Page header ── */
+.lab-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* লোগো বামে এবং বাটন ডানে রাখার জন্য */
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.lab-header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.lab-page-icon {
+  width: 52px; height: 52px;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, #7c3aed, #6d28d9);
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; flex-shrink: 0;
+  box-shadow: 0 6px 20px rgba(109,40,217,.3);
+}
+
+.lab-page-info h1 { 
+  font-size: 1.45rem; 
+  color: var(--text); 
+  font-weight: 800; 
+  letter-spacing: -.3px; 
+  margin: 0; 
+  line-height: 1.2;
+}
+
+.lab-page-info p { 
+  font-size: .85rem; 
+  color: var(--text-muted); 
+  margin-top: 2px; 
+}
+
+/* Submit button positioning */
+.lab-page-action { 
+  flex-shrink: 0; 
+}
+
+/* ── Search & toolbar ── */
+.lab-toolbar {
+  display: none; /* header-এ চলে গেছে */
+}
+
+/* Upgraded search box */
+.lab-search-wrap {
+  position: relative;
+  flex: 1;
+  max-width: 420px;
+}
+.lab-search-wrap .search-icon {
+  position: absolute;
+  left: 14px; top: 50%;
+  transform: translateY(-50%);
+  color: #8b5cf6;
+  pointer-events: none;
+  display: flex; align-items: center;
+}
+.lab-search-wrap input {
+  width: 100%;
+  padding: 11px 42px 11px 42px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 50px;
+  font-size: .875rem;
+  color: var(--text);
+  font-family: var(--font);
+  transition: border-color .2s, box-shadow .2s;
+  outline: none;
+}
+.lab-search-wrap input:focus {
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 3px rgba(124,58,237,.12);
+}
+.lab-search-wrap input::placeholder { color: var(--text-light); }
+.lab-search-wrap .search-clear {
+  position: absolute;
+  right: 14px; top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-light);
+  cursor: pointer;
+  display: none;
+  background: none;
+  border: none;
+  padding: 0;
+  line-height: 1;
+}
+.lab-search-wrap input:not(:placeholder-shown) ~ .search-clear { display: flex; }
+
+.lab-sort-select {
+  padding: 10px 14px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 50px;
+  font-size: .825rem;
+  color: var(--text);
+  cursor: pointer;
+  font-family: var(--font);
+  outline: none;
+  transition: border-color .2s;
+}
+.lab-sort-select:focus { border-color: #7c3aed; }
+
+/* ── Lab grid — 2-col mobile like Daraz ── */
+.lab-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  padding: 0 8px 80px;
+}
+/* old rules removed — new ones below */
+
+/* Skeleton */
+.skel { border-radius: var(--radius-sm); background: linear-gradient(90deg,var(--surface2) 25%,#e8edf3 50%,var(--surface2) 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; }
+
+/* ── Detail Modal ── */
+.lab-detail-modal { max-width: 720px; padding: 0; overflow: hidden; border-radius: var(--radius-2xl); display: flex; flex-direction: column; max-height: 90vh; }
+.lab-detail-body { padding: 16px 20px; flex-shrink: 0; }
+.lab-preview-wrap { height: 260px; background: var(--surface2); overflow: hidden; position: relative; }
+.lab-preview-wrap iframe { width: 100%; height: 100%; border: none; }
+.lab-preview-wrap img { width: 100%; height: 100%; object-fit: cover; }
+.preview-controls {
+  position: absolute; bottom: 10px; right: 10px;
+  display: flex; gap: 6px;
+}
+.preview-ctrl-btn {
+  padding: 6px 12px;
+  background: rgba(15,23,42,.7); color: #fff;
+  border: none; border-radius: var(--radius-sm);
+  font-size: .75rem; font-weight: 700;
+  cursor: pointer; transition: background var(--transition);
+  font-family: var(--font);
+  display: flex; align-items: center; gap: 5px;
+  backdrop-filter: blur(4px);
+}
+.preview-ctrl-btn:hover { background: rgba(15,23,42,.9); }
+.lab-detail-body { padding: 20px 24px; }
+.lab-detail-title { font-size: 1.2rem; font-weight: 800; margin-bottom: 6px; }
+.lab-detail-meta {
+  font-size: .8rem; color: var(--text-muted);
+  margin-bottom: 14px; display: flex; gap: 14px;
+  flex-wrap: wrap; align-items: center;
+}
+.lab-detail-meta span { display: flex; align-items: center; gap: 4px; }
+.lab-detail-desc { font-size: .875rem; color: var(--text-muted); line-height: 1.7; margin-bottom: 16px; }
+.lab-detail-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
+
+
+/* Submit project modal */
+.submit-preview-wrap {
+  height: 200px; background: #0f172a;
+  border-radius: var(--radius); overflow: hidden;
+  margin-bottom: 16px; border: 1px solid var(--border);
+}
+.submit-preview-wrap iframe { width: 100%; height: 100%; border: none; }
+
+@media (max-width: 767px) {
+  .lab-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px;
+    padding: 0 8px 80px;
+  }
+  .lab-thumb { height: 150px !important; }
+  .lab-detail-modal { max-width: 100%; }
+  .lab-preview-wrap { height: 200px; }
+  .lab-search-wrap { max-width: 100%; }
+  .lab-page-info p { display: none; }
+  .lab-page-action .btn span { display: none; }
+  .main-content { padding: 0 !important; }
+  .lab-section-title { padding: 10px 12px 6px; }
+}
+
+/* ── Payment tabs (same as store) ── */
+.payment-tabs { display:flex; gap:6px; padding:16px 20px 0; border-bottom:1px solid var(--border); margin-bottom:4px; }
+.pay-tab { display:flex; align-items:center; gap:6px; padding:8px 14px; border:none; background:none; border-radius:8px 8px 0 0; font-size:13px; font-weight:600; color:var(--text-muted); cursor:pointer; border-bottom:2px solid transparent; transition:color .15s,border-color .15s; font-family:var(--font); }
+.pay-tab:hover { color:var(--text-main); }
+.pay-tab.active { color:var(--accent,#3b6ef8); border-bottom-color:var(--accent,#3b6ef8); }
+.pay-panel { display:none; padding:16px 20px 20px; }
+.pay-panel.active { display:block; }
+.wallet-balance-card { background:var(--surface2); border-radius:12px; padding:14px 16px; margin-bottom:14px; }
+.wallet-balance-card .lbl { font-size:12px; color:var(--text-muted); margin-bottom:4px; }
+.wallet-balance-card .amt { font-size:22px; font-weight:700; color:var(--text-main); }
+.payment-info { border-radius:12px; padding:14px 16px; margin-bottom:14px; cursor:pointer; border:1.5px dashed; }
+.bkash-info { background:#fff0f6; border-color:#E2136E; }
+.nagad-info { background:#fff8f0; border-color:#F6921E; }
+.pay-method-row { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+.pay-method-label { font-size:13px; color:var(--text-muted); font-weight:500; }
+.pay-number { font-size:20px; font-weight:700; color:var(--text-main); font-family:monospace; letter-spacing:1px; }
+.pay-copy-hint { font-size:11px; color:var(--text-muted); margin-top:4px; }
+.pay-status-msg { margin-top:10px; font-size:13px; font-weight:500; border-radius:8px; padding:0; display:none; line-height:1.5; }
+.pay-status-msg.success { display:block; color:#1B5E20; background:#E8F5E9; padding:10px 12px; }
+.pay-status-msg.error { display:block; color:#B71C1C; background:#FFEBEE; padding:10px 12px; }
+.pay-status-msg.loading { display:block; color:var(--text-muted); background:var(--surface2); padding:10px 12px; }
+.pay-spin { display:inline-block; width:14px; height:14px; border:2px solid rgba(255,255,255,.4); border-top-color:#fff; border-radius:50%; animation:labspin .7s linear infinite; vertical-align:middle; margin-right:6px; }
+@keyframes labspin { to { transform:rotate(360deg); } }
+.purchased-badge { display:flex; align-items:center; gap:8px; padding:12px 16px; background:#d1fae5; border:1.5px solid #6ee7b7; border-radius:12px; color:#065f46; font-size:.85rem; font-weight:700; margin-top:8px; }
+
+/* ── Lab card — Daraz-style compact ── */
+.lab-card {
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform .22s ease, box-shadow .22s ease;
+  box-shadow: 0 1px 4px rgba(0,0,0,.08);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 0;
+}
+.lab-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(109,40,217,.13);
+  border-color: #c4b5fd;
+}
+.lab-thumb {
+  height: 160px;
+  background: var(--surface2);
+  overflow: hidden;
+  position: relative;
+}
+.lab-thumb iframe { width:100%; height:100%; border:none; pointer-events:none; }
+.lab-thumb-fallback {
+  width:100%; height:100%;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:8px;
+  background:linear-gradient(135deg,#f5f3ff,#ede9fe);
+  color:#8b5cf6; font-size:.78rem; font-weight:600;
+}
+.lab-thumb-badge {
+  position:absolute; top:10px; right:10px;
+  font-size:.67rem; font-weight:800;
+  padding:3px 10px; border-radius:50px;
+  letter-spacing:.02em;
+  backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+}
+.lab-thumb-badge.paid {
+  background:linear-gradient(135deg,#f59e0b,#d97706);
+  color:#fff; box-shadow:0 2px 8px rgba(245,158,11,.4);
+}
+.lab-thumb-badge.free {
+  background:rgba(16,185,129,.9);
+  color:#fff; box-shadow:0 2px 8px rgba(16,185,129,.3);
+}
+/* Compact card body like Daraz */
+.lab-body {
+  padding: 6px 8px 6px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  border-top: 1px solid var(--border);
+}
+.lab-body-left { flex: 1; min-width: 0; }
+.lab-title {
+  font-size: .8rem; font-weight: 700;
+  color: var(--text); line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-bottom: 1px;
+}
+.lab-author-row { display:flex; align-items:center; gap:5px; margin-bottom:3px; }
+.lab-author-avatar {
+  width:18px; height:18px; border-radius:50%;
+  background:linear-gradient(135deg,#7c3aed,#a78bfa);
+  color:#fff; font-size:.5rem; font-weight:800;
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+.lab-author-name { font-size:.71rem; font-weight:600; color:var(--text-muted); }
+.lab-views {
+  display:flex; align-items:center; gap:4px;
+  font-size:.71rem; color:var(--text-light); font-weight:500;
+}
+.lab-share-btn {
+  display:flex; align-items:center; justify-content:center;
+  width:30px; height:30px;
+  padding:0;
+  background:none;
+  border:1px solid var(--border);
+  border-radius:50%;
+  color:var(--text-muted);
+  cursor:pointer; font-family:var(--font);
+  transition:all .18s;
+  flex-shrink:0;
+}
+.lab-share-btn:hover { border-color:#7c3aed; color:#7c3aed; background:#f5f3ff; }
+.badge-paid { background:linear-gradient(135deg,#f59e0b,#d97706); color:#fff; font-size:.7rem; font-weight:700; padding:3px 10px; border-radius:20px; }
+.badge-free { background:linear-gradient(135deg,#10b981,#059669); color:#fff; font-size:.7rem; font-weight:700; padding:3px 10px; border-radius:20px; }
+
+/* ── Featured Section (Daraz Flash Sale style) ── */
+.lab-featured-section {
+  background: var(--surface);
+  margin-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 10px;
+}
+.lab-featured-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px 8px;
+}
+.lab-featured-header h3 {
+  font-size: .95rem;
+  font-weight: 800;
+  color: #7c3aed;
+  display: flex; align-items: center; gap: 6px;
+}
+.lab-featured-see-all {
+  font-size: .75rem; font-weight: 700;
+  color: #7c3aed;
+  border: 1px solid #7c3aed;
+  padding: 3px 10px; border-radius: 4px;
+  cursor: pointer; background: none;
+  font-family: var(--font);
+  transition: background .15s;
+}
+.lab-featured-see-all:hover { background: #f5f3ff; }
+.lab-featured-scroll {
+  display: flex;
+  overflow-x: auto;
+  gap: 10px;
+  padding: 0 12px 4px;
+  scrollbar-width: none;
+}
+.lab-featured-scroll::-webkit-scrollbar { display: none; }
+.lab-feat-card {
+  min-width: 110px;
+  max-width: 110px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.lab-feat-thumb {
+  width: 110px; height: 90px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: linear-gradient(135deg,#f5f3ff,#ede9fe);
+  position: relative;
+}
+.lab-feat-thumb iframe { width:100%; height:100%; border:none; pointer-events:none; }
+.lab-feat-thumb-fallback {
+  width:100%; height:100%;
+  display:flex; align-items:center; justify-content:center;
+  color:#8b5cf6;
+}
+.lab-feat-price {
+  font-size: .8rem; font-weight: 800;
+  color: #7c3aed;
+  margin-top: 5px;
+  text-align: center;
+}
+.lab-feat-price.free-tag { color: #10b981; }
+.lab-feat-name {
+  font-size: .68rem;
+  color: var(--text-muted);
+  text-align: center;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  margin-top: 2px;
+}
+
+/* ── Section title (Just For You style) ── */
+.lab-section-title {
+  padding: 10px 12px 6px;
+  font-size: .9rem;
+  font-weight: 800;
+  color: var(--text);
+  background: var(--bg);
+}
+
+/* Responsive: on desktop revert to multi-col */
+@media (min-width: 768px) {
+  .lab-grid {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 14px;
+    padding: 0 0 20px;
+  }
+  .lab-thumb { height: 180px; }
+  .lab-title {
+    display: block;
+    -webkit-line-clamp: unset;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .lab-featured-section {
+    border-radius: var(--radius-lg);
+    margin-bottom: 14px;
+  }
+  .lab-feat-card { min-width: 140px; max-width: 140px; }
+  .lab-feat-thumb { width:140px; height:110px; }
+  .lab-body {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+  }
+  .lab-share-btn { width:32px; height:32px; }
+}
+
+/* ── Clone dialog thumbnail ── */
+#cloneDialogThumb { width:56px; height:56px; border-radius:10px; overflow:hidden; flex-shrink:0; background:var(--surface2); }
+</style>
+</head>
+<body class="page-lab">
+
+<div id="headerMount"></div>
+<div id="sidebarBackdrop" class="sidebar-backdrop" onclick="closeSidebar()"></div>
+
+<div class="layout">
+  <div id="sidebarMount"></div>
+  <main class="main-content fade-in">
+
+
+
+
+    <!-- toolbar moved to header -->
+
+    <!-- ── Featured Section (Flash Sale style) ── -->
+    <section class="lab-featured-section" id="labFeaturedSection" style="display:none">
+      <div class="lab-featured-header">
+        <h3>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          Featured
+        </h3>
+        <button class="lab-featured-see-all" id="labFeatSeeAllBtn" onclick="openFeaturedPage()" style="display:none">SEE ALL</button>
+      </div>
+      <div class="lab-featured-scroll" id="labFeaturedScroll">
+        <!-- JS দিয়ে লোড হবে -->
+      </div>
+    </section>
+
+    <!-- ── Just For You Section ── -->
+    <div class="lab-section-title">Just For You</div>
+
+    <!-- ── Grid ── -->
+    <div class="lab-grid" id="labGrid">
+        <!-- Loader Skeletons -->
+        <div class="lab-card"><div class="lab-thumb skel" style="height:160px"></div><div class="lab-body"><div class="lab-body-left"><div class="skel" style="height:12px;width:70%;border-radius:6px;margin-bottom:7px"></div><div style="display:flex;align-items:center;gap:6px;margin-bottom:6px"><div class="skel" style="width:16px;height:16px;border-radius:50%;flex-shrink:0"></div><div class="skel" style="height:10px;width:40%;border-radius:6px"></div></div></div></div></div>
+        <div class="lab-card"><div class="lab-thumb skel" style="height:160px"></div><div class="lab-body"><div class="lab-body-left"><div class="skel" style="height:12px;width:70%;border-radius:6px;margin-bottom:7px"></div><div style="display:flex;align-items:center;gap:6px;margin-bottom:6px"><div class="skel" style="width:16px;height:16px;border-radius:50%;flex-shrink:0"></div><div class="skel" style="height:10px;width:40%;border-radius:6px"></div></div></div></div></div>
+        <div class="lab-card"><div class="lab-thumb skel" style="height:160px"></div><div class="lab-body"><div class="lab-body-left"><div class="skel" style="height:12px;width:70%;border-radius:6px;margin-bottom:7px"></div><div style="display:flex;align-items:center;gap:6px;margin-bottom:6px"><div class="skel" style="width:16px;height:16px;border-radius:50%;flex-shrink:0"></div><div class="skel" style="height:10px;width:40%;border-radius:6px"></div></div></div></div></div>
+        <div class="lab-card"><div class="lab-thumb skel" style="height:160px"></div><div class="lab-body"><div class="lab-body-left"><div class="skel" style="height:12px;width:70%;border-radius:6px;margin-bottom:7px"></div><div style="display:flex;align-items:center;gap:6px;margin-bottom:6px"><div class="skel" style="width:16px;height:16px;border-radius:50%;flex-shrink:0"></div><div class="skel" style="height:10px;width:40%;border-radius:6px"></div></div></div></div></div>
+    </div>
+
+  </main>
+</div>
+
+<div id="mobileNavMount"></div>
+
+<!-- ── Detail Modal ── -->
+<div class="modal-overlay" id="labDetailModal">
+  <div class="modal lab-detail-modal">
+    <div class="modal-close" onclick="closeModal('labDetailModal')"
+         style="position:absolute;top:14px;right:14px;z-index:10;background:rgba(255,255,255,.9)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </div>
+    <div class="lab-preview-wrap" id="labDetailPreview"></div>
+    <div class="lab-detail-body">
+      <div class="lab-detail-title" id="labDetailTitle"></div>
+      <div class="lab-detail-meta" id="labDetailMeta"></div>
+      <p class="lab-detail-desc" id="labDetailDesc"></p>
+      <div class="lab-detail-actions">
+        <button class="btn btn-secondary" onclick="openFullscreen()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+          Fullscreen
+        </button>
+        <button class="btn btn-outline" onclick="openCloneDialog()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Clone
+        </button>
+      </div>
+      <!-- Payment Section -->
+      <div id="labPaymentSection" style="display:none;margin:12px 20px 16px;background:linear-gradient(135deg,#fef9ec,#fffbf0);border:1.5px solid #f59e0b;border-radius:14px;padding:16px 18px">
+        <div style="font-size:.8rem;font-weight:700;color:#92400e;margin-bottom:10px">🔒 Premium Project</div>
+        <div id="labPaymentPrice" style="font-size:1.5rem;font-weight:900;color:#d97706;margin-bottom:12px"></div>
+        <div id="labPaymentMethods"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Submit Project Modal ── -->
+<div class="modal-overlay" id="submitModal">
+  <div class="modal" style="max-width:540px">
+    <div class="modal-header">
+      <div class="modal-title">Submit Project</div>
+      <div class="modal-close" onclick="closeModal('submitModal')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Project Title</label>
+      <input type="text" class="form-input" id="submitTitle" placeholder="My Awesome Project"/>
+      <div class="form-error" id="submitTitleErr">Title required</div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description</label>
+      <textarea class="form-input" id="submitDesc" rows="3" placeholder="Project description…" style="resize:vertical"></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">HTML Code (Preview)</label>
+      <textarea class="form-input font-mono" id="submitCode" rows="6" oninput="updateCodePreview()"></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Preview</label>
+      <div class="submit-preview-wrap">
+        <iframe id="submitPreviewIframe" sandbox="allow-scripts allow-same-origin"></iframe>
+      </div>
+    </div>
+    <button class="btn btn-primary btn-full" onclick="submitProject()">Publish to Lab</button>
+  </div>
+</div>
+
+<script src="../js/core.js"></script>
+<script>
+document.getElementById('headerMount').innerHTML    = buildHeader('lab');
+document.getElementById('sidebarMount').innerHTML   = buildSidebar('lab');
+document.getElementById('mobileNavMount').innerHTML = buildMobileNav('lab');
+
+let allProjects = [], currentProject = null;
+
+
+const LAB_PAY_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbygDTGvbG7sUTPAt2lO2iMsPHprZRlP7WjAwq4n4Q3D1SZduenpNPUaayf_c2VsTqC0Xw/exec";
+const LAB_PAY_API_KEY    = "KEY_26NKYEVDP_1770263198111";
+
+let purchasedLabIds = new Set();
+let labWalletBalance = 0;
+let labAppControl = {};
+
+async function loadLabMeta() {
+  try {
+    const [walletRes, ctrlRes, dlRes] = await Promise.all([
+      Api.getWallet ? Api.getWallet() : Promise.resolve(null),
+      Api.getAppConfig ? Api.getAppConfig() : Promise.resolve(null),
+      Api.getUserDownloads ? Api.getUserDownloads() : Promise.resolve(null)
+    ]);
+    labWalletBalance = parseFloat(walletRes?.balance || Session.getWallet() || 0);
+    const cfg = ctrlRes?.data || ctrlRes?.config || ctrlRes || {};
+    labAppControl = cfg;
+    if (cfg.bkash_number || cfg.bkashNumber) {
+      document.getElementById('labBkashNumber').textContent = cfg.bkash_number || cfg.bkashNumber;
+    }
+    if (cfg.nagad_number || cfg.nagadNumber) {
+      document.getElementById('labNagadNumber').textContent = cfg.nagad_number || cfg.nagadNumber;
+    }
+    const dls = dlRes?.downloads || dlRes?.data || [];
+    dls.forEach(d => { if (d.projectId || d.templateId) purchasedLabIds.add(String(d.projectId || d.templateId)); });
+    // Also load from localStorage
+    try {
+      const key = 'wevlo_lab_purchased_' + (Session.getUserId() || 'guest');
+      const arr = JSON.parse(localStorage.getItem(key) || '[]');
+      arr.forEach(id => purchasedLabIds.add(String(id)));
+    } catch(e) {}
+  } catch(e) {}
+}
+
+function renderPaymentSection(p) {
+  const section   = document.getElementById('labPaymentSection');
+  const methodsEl = document.getElementById('labPaymentMethods');
+  const priceEl   = document.getElementById('labPaymentPrice');
+  if (!section) return;
+  const isPaid = p.price && parseFloat(p.price) > 0;
+  if (!isPaid) { section.style.display = 'none'; return; }
+  section.style.display = 'block';
+  priceEl.innerHTML = '৳' + p.price + ' <span>BDT</span>';
+  if (purchasedLabIds.has(String(p.id))) {
+    methodsEl.innerHTML = '<div class="purchased-badge">✅ Already Purchased — Clone to use</div>';
+    return;
+  }
+  methodsEl.innerHTML = '<button class="btn btn-primary btn-full" style="margin-top:4px" onclick="openLabPaymentModal()">Buy ৳' + p.price + '</button>';
+}
+
+function openLabPaymentModal() {
+  const p = currentProject;
+  if (!p) return;
+  document.getElementById('labPayModalTitle').textContent      = 'Purchase: ' + (p.title || 'Project');
+  document.getElementById('labWalletBalanceAmt').textContent   = '৳' + labWalletBalance.toFixed(0);
+  document.getElementById('labTemplatePriceDisplay').textContent = '৳' + p.price;
+  document.getElementById('labBkashAmount').value = p.price;
+  document.getElementById('labNagadAmount').value = p.price;
+  ['labBkashTrxId','labNagadTrxId'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  ['labBkashStatusMsg','labNagadStatusMsg'].forEach(id => { const el=document.getElementById(id); if(el){el.className='pay-status-msg';el.textContent='';} });
+  labSwitchTab('wallet', document.querySelector('#labPaymentModal .pay-tab'));
+  document.getElementById('labPaymentModal').classList.add('open');
+}
+
+function labSwitchTab(tab, el) {
+  document.querySelectorAll('#labPaymentModal .pay-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('#labPaymentModal .pay-panel').forEach(p => p.classList.remove('active'));
+  if (el) el.classList.add('active');
+  const panel = document.getElementById('labPay' + tab.charAt(0).toUpperCase() + tab.slice(1));
+  if (panel) panel.classList.add('active');
+}
+
+function labCopyNumber(id) {
+  const num = document.getElementById(id)?.textContent?.trim();
+  if (!num || num.includes('X')) return;
+  navigator.clipboard.writeText(num).then(() => showToast('Number copied!', 'success'));
+}
+
+async function labPayWithWallet() {
+  const p = currentProject; if (!p) return;
+  const price = parseFloat(p.price);
+  if (labWalletBalance < price) { showToast('Insufficient wallet balance', 'error'); return; }
+  const btn = document.getElementById('labWalletPayBtn');
+  btn.disabled = true; btn.textContent = 'Processing…';
+  try {
+    const res = await Api.buyWithWallet(p.id, p.title, price);
+    if (res.status === 'success' || res.status === 'ok') {
+      labWalletBalance = parseFloat(res.newBalance || (labWalletBalance - price));
+      Session.setWallet(labWalletBalance);
+      labSavePurchase(p.id);
+      closeModal('labPaymentModal');
+      showToast('✅ Purchase successful!', 'success');
+      renderPaymentSection(p);
+    } else { showToast(res.message || 'Payment failed', 'error'); }
+  } catch(e) { showToast('Payment failed', 'error'); }
+  finally { btn.disabled = false; btn.textContent = 'Pay with Wallet'; }
+}
+
+async function labVerifyAndSubmit(method) {
+  const p = currentProject;
+  const cap = method.charAt(0).toUpperCase() + method.slice(1);
+  const trxEl = document.getElementById('lab' + cap + 'TrxId');
+  const errEl = document.getElementById('lab' + cap + 'TrxErr');
+  const btn   = document.getElementById('lab' + cap + 'VerifyBtn');
+  const msgEl = document.getElementById('lab' + cap + 'StatusMsg');
+  const trxId = trxEl.value.trim().toUpperCase();
+  if (!trxId || trxId.length < 5) { errEl.classList.add('show'); return; }
+  errEl.classList.remove('show');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="pay-spin"></span> Verifying…';
+  msgEl.className = 'pay-status-msg loading';
+  msgEl.textContent = '⏳ Checking transaction…';
+  const url = LAB_PAY_SCRIPT_URL + '?trxID=' + trxId + '&apiKey=' + LAB_PAY_API_KEY + '&amount=' + p.price;
+  try {
+    const res  = await fetch(url);
+    const data = await res.json();
+    if (data.status === 'success') {
+      msgEl.className = 'pay-status-msg success';
+      msgEl.innerHTML = '✅ Payment verified!<br>Amount: ৳' + data.amount + ' | TrxID: ' + data.trxID;
+      btn.innerHTML = '✅ Verified!';
+      await Api.submitPayment(p.id, trxId, method, p.price);
+      labSavePurchase(p.id);
+      setTimeout(() => { closeModal('labPaymentModal'); showToast('✅ Payment verified! Project unlocked 🎉', 'success'); renderPaymentSection(p); }, 1500);
+    } else {
+      msgEl.className = 'pay-status-msg error';
+      msgEl.innerHTML = '⚠️ ' + (data.message || 'Auto-verify failed.') + '<br><small>Submitting for manual review…</small>';
+      await Api.submitPayment(p.id, trxId, method, p.price);
+      labSavePurchase(p.id);
+      setTimeout(() => { closeModal('labPaymentModal'); showToast('Payment submitted! Admin will approve soon.', 'success'); }, 2000);
+    }
+  } catch(e) {
+    try {
+      await Api.submitPayment(p.id, trxId, method, p.price);
+      labSavePurchase(p.id);
+      msgEl.className = 'pay-status-msg error';
+      msgEl.innerHTML = '⚠️ Auto-verify unavailable. Submitted for manual review.';
+      setTimeout(() => { closeModal('labPaymentModal'); showToast('Payment submitted! Admin will approve soon.', 'success'); }, 2000);
+    } catch(e2) {
+      msgEl.className = 'pay-status-msg error';
+      msgEl.textContent = '❌ Submission failed. Please try again.';
+    }
+  } finally {
+    btn.disabled = false;
+    if (!btn.innerHTML.includes('Verified')) btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Verify & Unlock';
+  }
+}
+
+// Clone dialog inline payment helpers
+async function cloneDialogBuyWallet() {
+  const p = currentProject; if (!p) return;
+  const price = parseFloat(p.price);
+  if (labWalletBalance < price) { showToast('Insufficient wallet balance', 'error'); return; }
+  const btn = event.target;
+  btn.disabled = true; btn.textContent = 'Processing…';
+  try {
+    const res = await Api.buyWithWallet(p.id, p.title, price);
+    if (res.status === 'success' || res.status === 'ok') {
+      labWalletBalance = parseFloat(res.newBalance || (labWalletBalance - price));
+      Session.setWallet(labWalletBalance);
+      labSavePurchase(p.id);
+      showToast('✅ Purchase successful!', 'success');
+      // Switch to clone section
+      document.getElementById('cloneDialogBuySection').style.display = 'none';
+      document.getElementById('cloneDialogCloneSection').style.display = 'block';
+      renderPaymentSection(p);
+    } else { showToast(res.message || 'Payment failed', 'error'); }
+  } catch(e) { showToast('Payment failed', 'error'); }
+  finally { btn.disabled = false; btn.textContent = '💰 Pay with Wallet (Balance: ৳' + labWalletBalance.toFixed(0) + ')'; }
+}
+
+function cloneDialogOpenPayModal(method) {
+  closeModal('cloneDialog');
+  openLabPaymentModal();
+  setTimeout(() => labSwitchTab(method, document.querySelector('#labPaymentModal .pay-tab[onclick*="' + method + '"]')), 100);
+}
+
+function labSavePurchase(projectId) {
+  try {
+    purchasedLabIds.add(String(projectId));
+    const key = 'wevlo_lab_purchased_' + (Session.getUserId() || 'guest');
+    const arr = JSON.parse(localStorage.getItem(key) || '[]');
+    if (!arr.includes(String(projectId))) { arr.push(String(projectId)); localStorage.setItem(key, JSON.stringify(arr)); }
+  } catch(e) {}
+}
+
+function openCloneDialog() {
+  const p = currentProject; if (!p) return;
+  const isPaid = p.price && parseFloat(p.price) > 0;
+  const owned  = purchasedLabIds.has(String(p.id));
+
+  // Dialog populate
+  document.getElementById('cloneProjectName').value       = (p.title || 'Project') + ' (Clone)';
+  document.getElementById('cloneDialogTitle').textContent  = p.title || 'Untitled';
+  document.getElementById('cloneDialogAuthor').textContent = 'by ' + (p.author || 'Anonymous');
+  document.getElementById('cloneDialogPrice').textContent  = isPaid ? '৳' + p.price : 'Free';
+  document.getElementById('cloneDialogPrice').style.color  = isPaid ? '#d97706' : '#059669';
+  // Wallet balance update
+  const walBal = document.getElementById('cloneDialogWalletBal');
+  if (walBal) walBal.textContent = '৳' + labWalletBalance.toFixed(0);
+
+  // Thumbnail
+  const thumbEl = document.getElementById('cloneDialogThumb');
+  if (p.previewCode) {
+    thumbEl.innerHTML = '<iframe srcdoc="' + escHtml(p.previewCode) + '" sandbox="allow-scripts" style="width:100%;height:100%;border:none;pointer-events:none"></iframe>';
+  } else {
+    thumbEl.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#f5f3ff,#ede9fe);color:#7c3aed;font-size:.75rem;font-weight:700">No Preview</div>';
+  }
+
+  // Paid — not owned: show buy section, hide clone section
+  const buySection   = document.getElementById('cloneDialogBuySection');
+  const cloneSection = document.getElementById('cloneDialogCloneSection');
+  if (isPaid && !owned) {
+    buySection.style.display   = 'block';
+    cloneSection.style.display = 'none';
+    // populate buy section price
+    document.getElementById('cloneDialogBuyPrice').textContent = '৳' + p.price;
+  } else {
+    buySection.style.display   = 'none';
+    cloneSection.style.display = 'block';
+  }
+
+  document.getElementById('cloneDialog').classList.add('open');
+}
+
+async function confirmClone() {
+  const p = currentProject; if (!p) return;
+  const name = document.getElementById('cloneProjectName').value.trim() || (p.title + ' (Clone)');
+  const btn  = document.getElementById('confirmCloneBtn');
+  btn.disabled = true; btn.textContent = 'Cloning…';
+  const files = {};
+  files['index.html'] = p.fullscreenCode || p.previewCode || '<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>' + name + '</title></head><body><h1>' + name + '</h1></body></html>';
+  try {
+    const projects = await WevloDB.getProjects();
+    const newProject = { id:'p_'+Date.now(), name, type:'lab_clone', icon:'', sourceId:p.id, createdAt:Date.now(), updatedAt:Date.now(), files };
+    projects.unshift(newProject);
+    await WevloDB.setProjects(projects);
+    try { Api.saveClonedProject({ title:name, files, sourceId:p.id }); } catch(e) {}
+    closeModal('cloneDialog'); closeModal('labDetailModal');
+    showToast('✅ Cloned! Opening editor…', 'success');
+    setTimeout(() => Nav.editor(newProject.id), 800);
+  } catch(e) { showToast('Clone failed: ' + e.message, 'error'); }
+  finally {
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Clone & Open Editor';
+  }
+}
+
+async function init() {
+  await loadLabMeta();
+  try {
+    const data  = await Api.getLabProjects();
+    allProjects = data?.projects || data?.data || [];
+    renderLab(allProjects);
+  } catch(e) {
+    document.getElementById('labGrid').innerHTML = `<div class="empty-state">Failed to load.</div>`;
+  }
+}
+
+function renderLab(list) {
+  const grid = document.getElementById('labGrid');
+  if (!list.length) { grid.innerHTML = `<div class="empty-state">No projects yet.</div>`; return; }
+
+  // ── Featured (paid projects) → max 3 cards ──
+  const allFeatured = list.filter(p => p.price && parseFloat(p.price) > 0);
+  const featured    = allFeatured.slice(0, 3);
+  const featSection = document.getElementById('labFeaturedSection');
+  const featScroll  = document.getElementById('labFeaturedScroll');
+  const seeAllBtn   = document.getElementById('labFeatSeeAllBtn');
+  if (featured.length > 0) {
+    featSection.style.display = 'block';
+    featScroll.innerHTML = featured.map(p => {
+      const thumb = p.previewCode
+        ? `<iframe srcdoc="${escHtml(p.previewCode)}" sandbox="allow-scripts" loading="lazy"></iframe>`
+        : `<div class="lab-feat-thumb-fallback"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>`;
+      return `
+      <div class="lab-feat-card" onclick="openProjectDetail('${p.id}')">
+        <div class="lab-feat-thumb">${thumb}</div>
+        <div class="lab-feat-price">৳${p.price}</div>
+        <div class="lab-feat-name">${(p.title||'Untitled').slice(0,14)}</div>
+      </div>`;
+    }).join('');
+    // SEE ALL বাটন শুধু তখনই দেখাবে যখন ৩টির বেশি featured আছে
+    if (seeAllBtn) seeAllBtn.style.display = allFeatured.length > 3 ? 'inline-flex' : 'none';
+  }
+
+  // ── All Projects → 2-col compact grid ──
+  grid.innerHTML = list.map(p => {
+    const isPaid = p.price && parseFloat(p.price) > 0;
+    const initials = (p.author||'A').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+    const views = p.views || 0;
+    const vLabel = views >= 1000 ? (views/1000).toFixed(1)+'k' : views;
+    const badge = isPaid
+      ? `<span class="lab-thumb-badge paid">৳${p.price}</span>`
+      : `<span class="lab-thumb-badge free">Free</span>`;
+    const thumb = p.previewCode
+      ? `<iframe srcdoc="${escHtml(p.previewCode)}" sandbox="allow-scripts" loading="lazy"></iframe>`
+      : `<div class="lab-thumb-fallback"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg><span>No Preview</span></div>`;
+    return `
+    <div class="lab-card" onclick="openProjectDetail('${p.id}')">
+      <div class="lab-thumb">
+        ${thumb}
+        ${badge}
+      </div>
+      <div class="lab-body">
+        <div class="lab-body-left">
+          <div class="lab-title">${p.title||'Untitled'}</div>
+          <div class="lab-author-row">
+            <div class="lab-author-avatar">${initials}</div>
+            <span class="lab-author-name">${p.author||'Anonymous'}</span>
+          </div>
+          <div class="lab-views">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            ${vLabel}
+          </div>
+        </div>
+        <button class="lab-share-btn" onclick="event.stopPropagation();shareProject('${p.id}','${(p.title||'').replace(/'/g,'\\')}')">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+}
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function shareProject(id, title) {
+  const url = window.location.origin + window.location.pathname + '?p=' + id;
+  if (navigator.share) {
+    navigator.share({ title: title, url: url }).catch(()=>{});
+  } else {
+    navigator.clipboard.writeText(url).then(() => showToast('Link copied!', 'success')).catch(() => showToast(url, 'info'));
+  }
+}
+
+let currentFilter = 'newest';
+
+function filterLab(q) {
+  const clr = document.getElementById('labSearchClear');
+  if (clr) clr.style.display = q ? 'flex' : 'none';
+  applyLabFilter();
+}
+
+function clearLabSearch() {
+  const el = document.getElementById('labSearch');
+  if (el) el.value = '';
+  const clr = document.getElementById('labSearchClear');
+  if (clr) clr.style.display = 'none';
+  applyLabFilter();
+}
+function clearSearch() { clearLabSearch(); }
+
+function selectFilter(val, el) {
+  currentFilter = val;
+  document.querySelectorAll('.filter-option').forEach(b => b.classList.remove('selected'));
+  if (el) el.classList.add('selected');
+  const btn = document.getElementById('labFilterBtn');
+  if (btn) btn.classList.toggle('active', val !== 'newest');
+  document.getElementById('labFilterDropdown').classList.remove('open');
+  applyLabFilter();
+}
+
+function toggleFilterDropdown() {
+  document.getElementById('labFilterDropdown').classList.toggle('open');
+}
+
+document.addEventListener('click', function(e) {
+  const btn = document.getElementById('labFilterBtn');
+  const dd  = document.getElementById('labFilterDropdown');
+  if (dd && btn && !btn.contains(e.target) && !dd.contains(e.target)) {
+    dd.classList.remove('open');
+  }
+});
+
+function applyLabFilter() {
+  const q = (document.getElementById('labSearch')?.value || '').toLowerCase().trim();
+  let list = [...allProjects];
+  if (q) list = list.filter(p => (p.title||'').toLowerCase().includes(q) || (p.author||'').toLowerCase().includes(q));
+  if (currentFilter === 'views')   list.sort((a,b) => (b.views||0)-(a.views||0));
+  else if (currentFilter === 'newest') list.sort((a,b) => (b.timestamp||0)-(a.timestamp||0));
+  else if (currentFilter === 'free')   list = list.filter(p => !p.price || parseFloat(p.price) === 0);
+  else if (currentFilter === 'paid')   list = list.filter(p => p.price && parseFloat(p.price) > 0);
+  renderLab(list);
+}
+
+function sortLab(by) { currentFilter = by; applyLabFilter(); }
+
+function openFeaturedPage() {
+  // সব featured project sessionStorage-এ save করে নতুন পেজে যাবে
+  const featured = allProjects.filter(p => p.price && parseFloat(p.price) > 0);
+  try { sessionStorage.setItem('wevlo_featured_projects', JSON.stringify(featured)); } catch(e) {}
+  window.location.href = 'lab-featured.html';
+}
+
+
+async function openProjectDetail(id) {
+  const p = allProjects.find(x => x.id === id);
+  if (!p) return;
+  currentProject = p;
+
+  // Preview
+  const previewEl = document.getElementById('labDetailPreview');
+  if (previewEl) {
+    if (p.previewCode) {
+      previewEl.innerHTML = `<iframe srcdoc="${escHtml(p.previewCode)}" sandbox="allow-scripts allow-same-origin"></iframe>`;
+    } else {
+      previewEl.innerHTML = `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#f5f3ff,#ede9fe);color:#8b5cf6;font-size:.85rem;font-weight:600">No Preview</div>`;
+    }
+  }
+
+  // Title & desc
+  const titleEl = document.getElementById('labDetailTitle');
+  const descEl  = document.getElementById('labDetailDesc');
+  if (titleEl) titleEl.textContent = p.title || 'Untitled';
+  if (descEl)  descEl.textContent  = p.description || '';
+
+  // Payment section
+  renderPaymentSection(p);
+
+  // Open modal
+  document.getElementById('labDetailModal').classList.add('open');
+
+  // View count
+  try { await Api.incrementView(p.id); } catch(e) {}
+}
+
+function openFullscreen() {
+  if (!currentProject?.previewCode) return;
+  const win = window.open('', '_blank');
+  win.document.write(currentProject.previewCode);
+  win.document.close();
+}
+
+async function cloneProject() {
+  if (!currentProject) return;
+  const p = currentProject;
+  const code = p.previewCode || p.code || '';
+  const files = p.files || { 'index.html': code, 'style.css': '', 'script.js': '' };
+  const newProject = {
+    id: 'p_' + Date.now(),
+    name: (p.title || 'Cloned Project') + ' (Clone)',
+    type: 'html',
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+    files
+  };
+  try {
+    const existing = await WevloDB.getProjects();
+    existing.unshift(newProject);
+    await WevloDB.setProjects(existing);
+  } catch(e) {
+    showToast('Clone failed: ' + e.message, 'error'); return;
+  }
+  try { Api.saveClonedProject({ title: newProject.name, files, sourceId: p.id }); } catch(e) {}
+  showToast('Cloned! Opening editor...', 'success');
+  try {
+    const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(newProject))));
+    setTimeout(() => {
+      window.location.href = '/editor?p=' + encodeURIComponent(newProject.id) + '#d=' + encoded;
+    }, 600);
+  } catch(e) {
+    setTimeout(() => { window.location.href = '/editor'; }, 600);
+  }
+}
+
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function openSubmitModal() { document.getElementById('submitModal').classList.add('open'); }
+function updateCodePreview() {
+  document.getElementById('submitPreviewIframe').srcdoc = document.getElementById('submitCode').value;
+}
+
+init();
+</script>
+
+<!-- ── Lab Payment Modal ── -->
+<div class="modal-overlay" id="labPaymentModal">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-header">
+      <div class="modal-title" id="labPayModalTitle">Purchase Project</div>
+      <div class="modal-close" onclick="closeModal('labPaymentModal')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </div>
+    </div>
+    <div class="payment-tabs">
+      <button class="pay-tab active" onclick="labSwitchTab('wallet',this)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+        Wallet
+      </button>
+      <button class="pay-tab" onclick="labSwitchTab('bkash',this)">
+        <img src="https://i.ibb.co.com/LD18psjb/20260430-183927.png" style="width:20px;height:20px;object-fit:contain;vertical-align:middle"/> bKash
+      </button>
+      <button class="pay-tab" onclick="labSwitchTab('nagad',this)">
+        <img src="https://i.ibb.co.com/jkSqJczB/1679248342nagad.png" style="width:20px;height:20px;object-fit:contain;vertical-align:middle"/> Nagad
+      </button>
+    </div>
+    <div class="pay-panel active" id="labPayWallet">
+      <div class="wallet-balance-card">
+        <div class="lbl">Available Balance</div>
+        <div class="amt" id="labWalletBalanceAmt">৳0</div>
+      </div>
+      <p style="font-size:.875rem;color:var(--text-muted);margin:0 0 14px">Price: <strong id="labTemplatePriceDisplay">৳0</strong></p>
+      <button class="btn btn-primary btn-full" id="labWalletPayBtn" onclick="labPayWithWallet()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Pay with Wallet
+      </button>
+    </div>
+    <div class="pay-panel" id="labPayBkash">
+      <div class="payment-info bkash-info" onclick="labCopyNumber('labBkashNumber')">
+        <div class="pay-method-row">
+          <img src="https://i.ibb.co.com/LD18psjb/20260430-183927.png" style="width:48px;height:48px;object-fit:contain"/>
+          <span class="pay-method-label">Send Money to bKash</span>
+        </div>
+        <div class="pay-number" id="labBkashNumber">01XXXXXXXXX</div>
+        <div class="pay-copy-hint">👆 Tap to copy number</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Amount</label>
+        <input type="text" class="form-input" id="labBkashAmount" readonly/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Transaction ID (TrxID)</label>
+        <input type="text" class="form-input" id="labBkashTrxId" placeholder="e.g. 9G765KH..." maxlength="15" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()"/>
+        <div class="form-error" id="labBkashTrxErr">Transaction ID required</div>
+      </div>
+      <button class="btn btn-primary btn-full" id="labBkashVerifyBtn" onclick="labVerifyAndSubmit('bkash')" style="background:#E2136E">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Verify & Unlock
+      </button>
+      <div class="pay-status-msg" id="labBkashStatusMsg"></div>
+    </div>
+    <div class="pay-panel" id="labPayNagad">
+      <div class="payment-info nagad-info" onclick="labCopyNumber('labNagadNumber')">
+        <div class="pay-method-row">
+          <img src="https://i.ibb.co.com/jkSqJczB/1679248342nagad.png" style="width:48px;height:48px;object-fit:contain"/>
+          <span class="pay-method-label">Send Money to Nagad</span>
+        </div>
+        <div class="pay-number" id="labNagadNumber">01XXXXXXXXX</div>
+        <div class="pay-copy-hint">👆 Tap to copy number</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Amount</label>
+        <input type="text" class="form-input" id="labNagadAmount" readonly/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Transaction ID (TrxID)</label>
+        <input type="text" class="form-input" id="labNagadTrxId" placeholder="Nagad TrxID..." maxlength="15" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()"/>
+        <div class="form-error" id="labNagadTrxErr">Transaction ID required</div>
+      </div>
+      <button class="btn btn-primary btn-full" id="labNagadVerifyBtn" onclick="labVerifyAndSubmit('nagad')" style="background:#F6921E">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Verify & Unlock
+      </button>
+      <div class="pay-status-msg" id="labNagadStatusMsg"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Clone Dialog ── -->
+<div class="modal-overlay" id="cloneDialog">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header">
+      <div class="modal-title">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:6px"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        Clone Project
+      </div>
+      <div class="modal-close" onclick="closeModal('cloneDialog')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </div>
+    </div>
+    <div style="padding:0 20px 20px">
+      <!-- Project info card -->
+      <div style="display:flex;align-items:center;gap:14px;padding:14px;background:var(--surface2);border-radius:14px;margin-bottom:16px">
+        <div id="cloneDialogThumb" style="width:60px;height:60px;border-radius:12px;overflow:hidden;flex-shrink:0;background:var(--surface);border:1px solid var(--border)"></div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:.95rem;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="cloneDialogTitle"></div>
+          <div style="font-size:.73rem;color:var(--text-muted);margin-top:2px" id="cloneDialogAuthor"></div>
+          <div style="font-size:.85rem;font-weight:700;margin-top:4px" id="cloneDialogPrice"></div>
+        </div>
+      </div>
+
+      <!-- BUY SECTION — paid & not owned -->
+      <div id="cloneDialogBuySection" style="display:none">
+        <div style="background:#fef9ec;border:1.5px solid #f59e0b;border-radius:12px;padding:14px 16px;margin-bottom:14px;text-align:center">
+          <div style="font-size:.8rem;color:#92400e;margin-bottom:6px">🔒 Purchase required to clone</div>
+          <div style="font-size:1.4rem;font-weight:900;color:#d97706;margin-bottom:12px" id="cloneDialogBuyPrice">৳0</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <button class="btn btn-primary btn-full" onclick="cloneDialogBuyWallet()">
+              💰 Pay with Wallet (Balance: <span id="cloneDialogWalletBal">৳0</span>)
+            </button>
+            <button class="btn btn-outline btn-full" onclick="cloneDialogOpenPayModal('bkash')" style="border-color:#E2136E;color:#E2136E">
+              <img src="https://i.ibb.co.com/LD18psjb/20260430-183927.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;margin-right:6px"/> Pay with bKash
+            </button>
+            <button class="btn btn-outline btn-full" onclick="cloneDialogOpenPayModal('nagad')" style="border-color:#F6921E;color:#F6921E">
+              <img src="https://i.ibb.co.com/jkSqJczB/1679248342nagad.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;margin-right:6px"/> Pay with Nagad
+            </button>
+          </div>
+        </div>
+        <button class="btn btn-secondary btn-full" onclick="closeModal('cloneDialog')">Cancel</button>
+      </div>
+
+      <!-- CLONE SECTION — free or owned -->
+      <div id="cloneDialogCloneSection" style="display:none">
+        <div class="form-group">
+          <label class="form-label">Project Name</label>
+          <input type="text" class="form-input" id="cloneProjectName" placeholder="My Project"/>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:4px">
+          <button class="btn btn-secondary" style="flex:1" onclick="closeModal('cloneDialog')">Cancel</button>
+          <button class="btn btn-primary" style="flex:2" id="confirmCloneBtn" onclick="confirmClone()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Clone & Open Editor
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="../js/code.js"></script>
+</body>
+</html>

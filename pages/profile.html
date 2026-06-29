@@ -1,0 +1,983 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Wevlo — Profile</title>
+<link rel="stylesheet" href="../css/style.css"/>
+<style>
+/* header নেই — main top padding কমানো */
+.layout { padding-top: 0 !important; }
+.main-content { padding-top: 16px !important; }
+
+/* ══════════════════════════════════════════
+   PROFILE HERO — glassmorphism + mesh bg
+══════════════════════════════════════════ */
+.profile-hero {
+  position: relative;
+  border-radius: 20px;
+  overflow: hidden;
+  margin-bottom: 20px;
+  background: linear-gradient(135deg, #1e1b4b 0%, #3730a3 40%, #6d28d9 75%, #7c3aed 100%);
+  padding: 0;
+}
+.profile-hero-bg {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse at 10% 30%, rgba(139,92,246,.55) 0%, transparent 55%),
+    radial-gradient(ellipse at 85% 10%, rgba(99,102,241,.45) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 90%, rgba(109,40,217,.4) 0%, transparent 55%),
+    radial-gradient(ellipse at 70% 60%, rgba(37,99,235,.3) 0%, transparent 45%);
+}
+.profile-hero-noise {
+  position: absolute; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.65' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.06'/%3E%3C/svg%3E");
+  opacity: .5;
+}
+/* decorative circles */
+.profile-hero::after {
+  content: '';
+  position: absolute;
+  width: 220px; height: 220px;
+  border-radius: 50%;
+  border: 40px solid rgba(255,255,255,.04);
+  top: -80px; right: -60px;
+  pointer-events: none;
+}
+.profile-hero::before {
+  content: '';
+  position: absolute;
+  width: 140px; height: 140px;
+  border-radius: 50%;
+  border: 28px solid rgba(255,255,255,.05);
+  bottom: -50px; left: -40px;
+  pointer-events: none;
+}
+.profile-hero-inner {
+  position: relative; z-index: 2;
+  padding: 28px 24px 24px;
+}
+/* top row */
+.profile-top-row {
+  display: flex; align-items: flex-start; gap: 16px; margin-bottom: 20px;
+}
+.profile-avatar-wrap { position: relative; flex-shrink: 0; }
+.profile-avatar-lg {
+  width: 72px; height: 72px; border-radius: 50%;
+  background: rgba(255,255,255,.15);
+  border: 2.5px solid rgba(255,255,255,.5);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.7rem; font-weight: 900; color: #fff;
+  letter-spacing: -.04em;
+  box-shadow: 0 8px 32px rgba(109,40,217,.35), 0 0 0 6px rgba(255,255,255,.07);
+  backdrop-filter: blur(8px);
+}
+.avatar-ring {
+  position: absolute; inset: -5px;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, rgba(167,139,250,.8), rgba(99,102,241,.4), rgba(255,255,255,.6), rgba(167,139,250,.8));
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #fff 0);
+  mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #fff 0);
+  animation: spin-ring 4s linear infinite;
+}
+@keyframes spin-ring { to { transform: rotate(360deg); } }
+.profile-info-col { flex: 1; min-width: 0; }
+.profile-name {
+  font-size: 1.25rem; font-weight: 800; color: #fff;
+  margin-bottom: 3px; letter-spacing: -.02em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.profile-email {
+  color: rgba(255,255,255,.7); font-size: .82rem;
+  margin-bottom: 10px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.profile-badges { display: flex; gap: 6px; flex-wrap: wrap; }
+.pbadge {
+  padding: 3px 10px; border-radius: 100px;
+  font-size: .7rem; font-weight: 700; letter-spacing: .02em;
+  backdrop-filter: blur(8px);
+}
+.pbadge-plan {
+  background: rgba(255,255,255,.18);
+  border: 1px solid rgba(255,255,255,.35);
+  color: #fff;
+}
+.pbadge-joined {
+  background: rgba(109,40,217,.3);
+  border: 1px solid rgba(167,139,250,.3);
+  color: rgba(255,255,255,.85);
+}
+.pbadge-sub {
+  background: linear-gradient(90deg,#f59e0b,#ef4444);
+  border: none; color: #fff;
+}
+
+.profile-stats-strip {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  background: rgba(255,255,255,.08);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.15);
+  overflow: hidden;
+}
+.pstat {
+  padding: 14px 12px; text-align: center;
+  position: relative;
+}
+.pstat + .pstat::before {
+  content: '';
+  position: absolute; left: 0; top: 15%; height: 70%;
+  width: 1px; background: rgba(255,255,255,.18);
+}
+.pstat-val {
+  font-size: 1.4rem; font-weight: 900; color: #fff;
+  line-height: 1; letter-spacing: -.04em;
+}
+.pstat-lbl {
+  font-size: .65rem; color: rgba(255,255,255,.6);
+  margin-top: 4px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em;
+}
+/* upgrade banner */
+.upgrade-strip {
+  display: flex; align-items: center; justify-content: space-between;
+  background: rgba(255,255,255,.1);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.18);
+  padding: 12px 16px;
+  margin-top: 12px;
+  cursor: pointer;
+  transition: background .2s;
+  text-decoration: none;
+}
+.upgrade-strip:hover { background: rgba(255,255,255,.18); }
+.upgrade-strip-left { display: flex; align-items: center; gap: 10px; }
+.upgrade-strip-icon {
+  width: 34px; height: 34px; border-radius: 10px;
+  background: linear-gradient(135deg,#f59e0b,#ef4444);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.upgrade-strip-text { color: #fff; }
+.upgrade-strip-title { font-size: .875rem; font-weight: 700; }
+.upgrade-strip-sub   { font-size: .72rem; color: rgba(255,255,255,.7); margin-top: 1px; }
+.upgrade-strip-arrow { color: rgba(255,255,255,.6); }
+
+/* ══════════════════════════════════════════
+   QUICK ACTIONS
+══════════════════════════════════════════ */
+.quick-actions {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 10px; margin-bottom: 20px;
+}
+.qa-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 8px;
+  text-align: center;
+  cursor: pointer;
+  transition: all .2s;
+  color: var(--text);
+  font-family: var(--font);
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+}
+.qa-btn:hover { background: var(--surface2); border-color: var(--primary); transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,.08); }
+.qa-icon {
+  width: 40px; height: 40px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+}
+.qa-label { font-size: .7rem; font-weight: 600; color: var(--text-muted); }
+
+/* ══════════════════════════════════════════
+   SUBSCRIPTION STATUS CARD
+══════════════════════════════════════════ */
+.sub-status-card {
+  border-radius: 16px;
+  padding: 18px 20px;
+  margin-bottom: 20px;
+  display: flex; align-items: center; gap: 14px;
+  position: relative; overflow: hidden;
+}
+.sub-status-card.active-sub {
+  background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+  border: 1.5px solid #a7f3d0;
+}
+.sub-status-card.no-sub {
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+.sub-status-icon {
+  width: 46px; height: 46px; border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.sub-status-icon.active { background: #059669; }
+.sub-status-icon.free   { background: var(--surface2); }
+.sub-status-info { flex: 1; min-width: 0; }
+.sub-status-title { font-size: .95rem; font-weight: 800; margin-bottom: 3px; }
+.sub-status-desc  { font-size: .78rem; color: var(--text-muted); }
+.sub-status-expiry {
+  font-size: .72rem; font-weight: 700;
+  padding: 4px 10px; border-radius: 100px;
+  background: rgba(5,150,105,.12); color: #047857;
+  white-space: nowrap; flex-shrink: 0;
+}
+
+/* ══════════════════════════════════════════
+   TRANSACTION LIST
+══════════════════════════════════════════ */
+.trx-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 13px 0;
+  border-bottom: 1px solid var(--border);
+  transition: background .15s;
+}
+.trx-item:last-child { border-bottom: none; }
+.trx-icon {
+  width: 40px; height: 40px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.trx-icon.credit { background: #ecfdf5; color: #059669; }
+.trx-icon.debit  { background: #fff1f2; color: #e11d48; }
+.trx-icon.sub    { background: #eff6ff; color: #2563eb; }
+.trx-info { flex: 1; min-width: 0; }
+.trx-name {
+  font-size: .875rem; font-weight: 600;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.trx-date { font-size: .72rem; color: var(--text-muted); margin-top: 2px; display: flex; align-items: center; gap: 6px; }
+.trx-trxid {
+  font-family: monospace; font-size: .65rem;
+  background: var(--surface2); padding: 1px 6px; border-radius: 4px;
+  color: var(--text-muted);
+}
+.trx-amount { font-weight: 800; font-size: .95rem; flex-shrink: 0; }
+.trx-amount.credit { color: #059669; }
+.trx-amount.debit  { color: #e11d48; }
+.trx-method-chip {
+  font-size: .65rem; font-weight: 700; padding: 2px 7px;
+  border-radius: 100px; margin-left: 4px;
+  background: var(--surface2); color: var(--text-muted);
+}
+
+/* ══════════════════════════════════════════
+   WALLET RECHARGE MODAL (same as subscription)
+══════════════════════════════════════════ */
+.payment-tabs {
+  display: flex; border-bottom: 1px solid var(--border);
+  background: var(--surface2);
+}
+.pay-tab {
+  flex: 1; padding: 8px 6px;
+  border: none; background: none; cursor: pointer;
+  font-size: .8rem; font-weight: 600; color: var(--text-muted);
+  border-bottom: 2.5px solid transparent; margin-bottom: -1px;
+  display: flex; align-items: center; justify-content: center; gap: 5px;
+  transition: all .2s; font-family: var(--font);
+}
+.pay-tab:hover { color: var(--text); }
+.pay-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+.pay-panel { display: none; padding: 10px 16px 16px; }
+.pay-panel.active { display: block; }
+.payment-info {
+  border: 1.5px dashed; border-radius: 10px;
+  padding: 10px 14px; margin-bottom: 10px; cursor: pointer;
+  transition: opacity .2s;
+}
+.payment-info:hover { opacity: .85; }
+.bkash-info { background: #fff0f6; border-color: #E2136E; }
+.nagad-info  { background: #fff8f0; border-color: #F6921E; }
+.pay-method-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.pay-method-label { font-size: .85rem; font-weight: 600; color: var(--text-muted); }
+.pay-number { font-size: 17px; font-weight: 700; color: var(--text); font-family: monospace; letter-spacing: 1px; }
+.pay-copy-hint { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+.pay-status-msg {
+  display: none; border-radius: 8px; font-size: .82rem;
+  margin-top: 12px; font-weight: 500;
+}
+.pay-status-msg.success { display: block; color: #1B5E20; background: #E8F5E9; padding: 10px 12px; }
+.pay-status-msg.error   { display: block; color: #B71C1C; background: #FFEBEE; padding: 10px 12px; }
+.pay-status-msg.loading { display: block; color: var(--text-muted); background: var(--surface2); padding: 10px 12px; }
+.pay-spin {
+  display: inline-block; width: 14px; height: 14px;
+  border: 2px solid rgba(255,255,255,.3); border-top-color: #fff;
+  border-radius: 50%; animation: spin .7s linear infinite;
+  vertical-align: middle; margin-right: 4px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.verify-btn {
+  width: 100%; padding: 11px; border: none; border-radius: 10px;
+  color: #fff; font-size: .88rem; font-weight: 700;
+  cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+  font-family: var(--font); transition: opacity .2s;
+}
+.verify-btn:disabled { opacity: .6; cursor: not-allowed; }
+.wallet-pay-balance {
+  background: linear-gradient(135deg, #1e3a8a, #2563eb);
+  border-radius: 14px; padding: 18px 20px; margin-bottom: 16px; color: #fff;
+}
+.wallet-pay-balance .wbal-label { font-size: .8rem; opacity: .8; margin-bottom: 6px; }
+.wallet-pay-balance .wbal-amount { font-size: 2rem; font-weight: 800; letter-spacing: -.03em; }
+.wallet-pay-balance .wbal-currency { font-size: 1rem; opacity: .8; }
+.wallet-insufficient {
+  background: #fff8f0; border: 1.5px solid #F6921E;
+  border-radius: 10px; padding: 12px 14px;
+  font-size: .82rem; color: #92400e;
+  margin-bottom: 14px; display: none;
+}
+.recharge-summary {
+  background: var(--surface2); border-radius: 8px;
+  padding: 8px 12px; margin-bottom: 10px;
+}
+.recharge-summary-row {
+  display: flex; justify-content: space-between; align-items: center;
+}
+.recharge-summary-label { font-size: .82rem; color: var(--text-muted); font-weight: 500; }
+.recharge-summary-amount { font-size: 1rem; font-weight: 900; color: var(--primary); }
+.amount-chips { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
+.amount-chip {
+  padding: 5px 12px; border-radius: 100px;
+  border: 1.5px solid var(--border);
+  background: var(--surface); font-size: .77rem; font-weight: 700;
+  cursor: pointer; transition: all .2s; font-family: var(--font);
+  color: var(--text);
+}
+.amount-chip:hover,
+.amount-chip.active { border-color: var(--primary); background: var(--primary); color: #fff; }
+.custom-amount-input {
+  width: 100%; padding: 9px 12px; border-radius: 8px;
+  border: 1.5px solid var(--border);
+  background: var(--surface); color: var(--text);
+  font-size: .9rem; font-weight: 700; font-family: monospace;
+  outline: none; transition: border .2s; box-sizing: border-box;
+  margin-bottom: 10px;
+}
+.custom-amount-input:focus { border-color: var(--primary); }
+
+/* edit profile section */
+.edit-field { margin-bottom: 14px; }
+.edit-label { font-size: .78rem; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; }
+.edit-input {
+  width: 100%; padding: 11px 14px; border-radius: 10px;
+  border: 1.5px solid var(--border); background: var(--surface);
+  color: var(--text); font-size: .9rem; font-family: var(--font);
+  outline: none; transition: border .2s; box-sizing: border-box;
+}
+.edit-input:focus { border-color: var(--primary); }
+
+@media (max-width: 640px) {
+  .profile-hero-inner { padding: 22px 18px 18px; }
+  .profile-avatar-lg { width: 62px; height: 62px; font-size: 1.4rem; }
+  .quick-actions { grid-template-columns: repeat(4,1fr); gap: 8px; }
+  .qa-icon { width: 36px; height: 36px; }
+  .qa-label { font-size: .65rem; }
+}
+</style>
+</head>
+<body>
+<div id="sidebarBackdrop" class="sidebar-backdrop" onclick="closeSidebar()"></div>
+<div class="layout">
+  <div id="sidebarMount"></div>
+  <main class="main-content fade-in">
+
+    <!-- ── Profile Hero ── -->
+    <div class="profile-hero">
+      <div class="profile-hero-bg"></div>
+      <div class="profile-hero-noise"></div>
+      <div class="profile-hero-inner">
+        <div class="profile-top-row">
+          <div class="profile-avatar-wrap">
+            <div class="profile-avatar-lg" id="profileAvatar">?</div>
+            <div class="avatar-ring"></div>
+          </div>
+          <div class="profile-info-col">
+            <div class="profile-name" id="profileName">Loading…</div>
+            <div class="profile-email" id="profileEmail"></div>
+            <div class="profile-badges">
+              <span class="pbadge pbadge-plan" id="profilePlan">Free Plan</span>
+              <span class="pbadge pbadge-joined" id="profileJoined"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="profile-stats-strip">
+          <div class="pstat">
+            <div class="pstat-val" id="statProjects">—</div>
+            <div class="pstat-lbl">Projects</div>
+          </div>
+          <div class="pstat">
+            <div class="pstat-val" id="statDownloads">—</div>
+            <div class="pstat-lbl">Downloads</div>
+          </div>
+          <div class="pstat">
+            <div class="pstat-val" id="statWalletBal">৳—</div>
+            <div class="pstat-lbl">Wallet</div>
+          </div>
+        </div>
+
+        <!-- Upgrade strip -->
+        <div class="upgrade-strip" id="upgradeStrip" onclick="Nav.subscribe()">
+          <div class="upgrade-strip-left">
+            <div class="upgrade-strip-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            </div>
+            <div class="upgrade-strip-text">
+              <div class="upgrade-strip-title">Upgrade to Pro</div>
+              <div class="upgrade-strip-sub">Unlock all features & priority builds</div>
+            </div>
+          </div>
+          <div class="upgrade-strip-arrow">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Subscription Status ── -->
+    <div class="sub-status-card no-sub" id="subStatusCard" style="display:none">
+      <div class="sub-status-icon free" id="subStatusIcon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      </div>
+      <div class="sub-status-info">
+        <div class="sub-status-title" id="subStatusTitle">Free Plan</div>
+        <div class="sub-status-desc" id="subStatusDesc">Upgrade to unlock premium features</div>
+      </div>
+      <div class="sub-status-expiry" id="subStatusExpiry" style="display:none"></div>
+    </div>
+
+    <!-- ── Quick Actions ── -->
+    <div class="quick-actions">
+      <button class="qa-btn" onclick="openRechargeModal()">
+        <div class="qa-icon" style="background:#eff6ff">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+        </div>
+        <span class="qa-label">Recharge</span>
+      </button>
+      <button class="qa-btn" onclick="Nav.subscribe()">
+        <div class="qa-icon" style="background:#fef9c3">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        </div>
+        <span class="qa-label">Subscribe</span>
+      </button>
+      <button class="qa-btn" onclick="openEditModal()">
+        <div class="qa-icon" style="background:#f0fdf4">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </div>
+        <span class="qa-label">Edit</span>
+      </button>
+      <button class="qa-btn" onclick="Nav.projects ? Nav.projects() : (location.href='/projects')">
+        <div class="qa-icon" style="background:#fdf4ff">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9333ea" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        </div>
+        <span class="qa-label">Projects</span>
+      </button>
+    </div>
+
+    <!-- ── Transaction History ── -->
+    <div class="card">
+      <div class="page-header" style="margin-bottom:16px">
+        <div class="page-header-text">
+          <h3>Transaction History</h3>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="Nav.wallet()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+          Wallet
+        </button>
+      </div>
+      <div id="trxContent">
+        <div style="display:flex;align-items:center;gap:10px;padding:20px 0;color:var(--text-muted)">
+          <div class="spinner"></div> Loading…
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+<div id="mobileNavMount"></div>
+
+<!-- ══════════════════════════════════════════
+     WALLET RECHARGE MODAL
+══════════════════════════════════════════ -->
+<div class="modal-overlay" id="rechargeModal">
+  <div class="modal" style="max-width:400px;padding:0;overflow:hidden">
+    <div class="modal-header" style="padding:12px 16px">
+      <div class="modal-title">💳 Wallet Recharge</div>
+      <div class="modal-close" onclick="closeRechargeModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </div>
+    </div>
+
+    <!-- Amount selector -->
+    <div style="padding:10px 16px 0">
+      <div style="font-size:.72rem;font-weight:700;color:var(--text-muted);margin-bottom:7px;text-transform:uppercase;letter-spacing:.04em">Select Amount</div>
+      <div class="amount-chips">
+        <button class="amount-chip" onclick="selectAmount(50)">৳50</button>
+        <button class="amount-chip" onclick="selectAmount(100)">৳100</button>
+        <button class="amount-chip" onclick="selectAmount(200)">৳200</button>
+        <button class="amount-chip" onclick="selectAmount(500)">৳500</button>
+        <button class="amount-chip" onclick="selectAmount(1000)">৳1000</button>
+      </div>
+      <input type="number" class="custom-amount-input" id="rechargeAmount"
+             placeholder="Or type custom amount…" min="10"
+             oninput="onAmountInput()" />
+    </div>
+
+    <div class="payment-tabs">
+      <button class="pay-tab active" onclick="rSwitchTab('bkash',this)">
+        <img src="https://i.ibb.co.com/LD18psjb/20260430-183927.png" style="width:16px;height:16px;object-fit:contain;vertical-align:middle"/> bKash
+      </button>
+      <button class="pay-tab" onclick="rSwitchTab('nagad',this)">
+        <img src="https://i.ibb.co.com/jkSqJczB/1679248342nagad.png" style="width:16px;height:16px;object-fit:contain;vertical-align:middle"/> Nagad
+      </button>
+
+    </div>
+
+    <!-- bKash Panel -->
+    <div class="pay-panel active" id="rPayBkash">
+      <div class="payment-info bkash-info" onclick="rCopyNumber('rBkashNumber')">
+        <div class="pay-method-row">
+          <img src="https://i.ibb.co.com/LD18psjb/20260430-183927.png" style="width:36px;height:36px;object-fit:contain"/>
+          <span class="pay-method-label">Send Money to bKash</span>
+        </div>
+        <div class="pay-number" id="rBkashNumber">Loading…</div>
+        <div class="pay-copy-hint">👆 Tap to copy number</div>
+      </div>
+      <div class="recharge-summary">
+        <div class="recharge-summary-row">
+          <span class="recharge-summary-label">Recharge Amount</span>
+          <span class="recharge-summary-amount" id="rBkashAmountShow">৳—</span>
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom:10px">
+        <label class="form-label" style="font-size:.72rem">Transaction ID (TrxID)</label>
+        <input type="text" class="form-input" id="rBkashTrxId"
+               placeholder="e.g. 9G765KH…" maxlength="15"
+               style="text-transform:uppercase"
+               oninput="this.value=this.value.toUpperCase()"/>
+        <div class="form-error" id="rBkashTrxErr">Transaction ID required</div>
+      </div>
+      <button class="verify-btn" id="rBkashVerifyBtn"
+              style="background:#E2136E"
+              onclick="rVerifyAndSubmit('bkash')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Verify & Recharge
+      </button>
+      <div class="pay-status-msg" id="rBkashStatusMsg"></div>
+    </div>
+
+    <!-- Nagad Panel -->
+    <div class="pay-panel" id="rPayNagad">
+      <div class="payment-info nagad-info" onclick="rCopyNumber('rNagadNumber')">
+        <div class="pay-method-row">
+          <img src="https://i.ibb.co.com/jkSqJczB/1679248342nagad.png" style="width:36px;height:36px;object-fit:contain"/>
+          <span class="pay-method-label">Send Money to Nagad</span>
+        </div>
+        <div class="pay-number" id="rNagadNumber">Loading…</div>
+        <div class="pay-copy-hint">👆 Tap to copy number</div>
+      </div>
+      <div class="recharge-summary">
+        <div class="recharge-summary-row">
+          <span class="recharge-summary-label">Recharge Amount</span>
+          <span class="recharge-summary-amount" id="rNagadAmountShow">৳—</span>
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom:10px">
+        <label class="form-label" style="font-size:.72rem">Transaction ID (TrxID)</label>
+        <input type="text" class="form-input" id="rNagadTrxId"
+               placeholder="Nagad TrxID…" maxlength="15"
+               style="text-transform:uppercase"
+               oninput="this.value=this.value.toUpperCase()"/>
+        <div class="form-error" id="rNagadTrxErr">Transaction ID required</div>
+      </div>
+      <button class="verify-btn" id="rNagadVerifyBtn"
+              style="background:#F6921E"
+              onclick="rVerifyAndSubmit('nagad')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Verify & Recharge
+      </button>
+      <div class="pay-status-msg" id="rNagadStatusMsg"></div>
+    </div>
+
+
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     EDIT PROFILE MODAL
+══════════════════════════════════════════ -->
+<div class="modal-overlay" id="editProfileModal">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-header">
+      <div class="modal-title">✏️ Edit Profile</div>
+      <div class="modal-close" onclick="closeEditModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </div>
+    </div>
+    <div class="edit-field">
+      <div class="edit-label">Full Name</div>
+      <input type="text" class="edit-input" id="editName" placeholder="Your name…"/>
+    </div>
+    <div class="edit-field">
+      <div class="edit-label">Email</div>
+      <input type="email" class="edit-input" id="editEmail" placeholder="email@example.com" readonly style="opacity:.6;cursor:not-allowed"/>
+      <div style="font-size:.72rem;color:var(--text-muted);margin-top:5px">Email পরিবর্তন করা যাবে না।</div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:8px">
+      <button class="btn btn-secondary" style="flex:1" onclick="closeEditModal()">Cancel</button>
+      <button class="btn btn-primary" style="flex:1" id="saveProfileBtn" onclick="saveProfile()">Save Changes</button>
+    </div>
+    <div class="pay-status-msg" id="editStatusMsg" style="margin-top:10px"></div>
+  </div>
+</div>
+
+<script src="../js/core.js"></script>
+<script>
+if (!requireAuth()) {}
+document.getElementById('sidebarMount').innerHTML   = buildSidebar('profile');
+document.getElementById('mobileNavMount').innerHTML = buildMobileNav('profile');
+
+/* ── Payment constants (same as subscription.html) ── */
+const PAY_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbygDTGvbG7sUTPAt2lO2iMsPHprZRlP7WjAwq4n4Q3D1SZduenpNPUaayf_c2VsTqC0Xw/exec";
+const PAY_API_KEY    = "KEY_26NKYEVDP_1770263198111";
+
+let appCfg = {};
+let rechargeAmount = 0;
+
+/* ════════════════════════════════════════════
+   INIT
+════════════════════════════════════════════ */
+async function init() {
+  const name  = Session.getName();
+  const email = Session.getEmail();
+  const initials = name
+    ? name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2)
+    : '?';
+  document.getElementById('profileAvatar').textContent = initials;
+  document.getElementById('profileName').textContent   = name || 'User';
+  document.getElementById('profileEmail').textContent  = email || '';
+
+  const projects = await WevloDB.getProjects();
+  document.getElementById('statProjects').textContent = projects.length;
+
+  const [profile, wallet, trx, cfg, subStatus] = await Promise.allSettled([
+    Api.getProfile(),
+    Api.getWallet(),
+    Api.getTransactions(),
+    Api.getAppConfig(),
+    Api.getSubscriptionStatus()
+  ]);
+
+  /* Config — payment numbers */
+  if (cfg.status === 'fulfilled') {
+    appCfg = cfg.value?.data || {};
+    document.getElementById('rBkashNumber').textContent =
+      appCfg.bkash_number || appCfg.bkashNumber || '01XXXXXXXXX';
+    document.getElementById('rNagadNumber').textContent =
+      appCfg.nagad_number || appCfg.nagadNumber || '01XXXXXXXXX';
+  }
+
+  /* Wallet */
+  if (wallet.status === 'fulfilled' && wallet.value?.balance !== undefined) {
+    const bal = parseFloat(wallet.value.balance || 0);
+    document.getElementById('statWalletBal').textContent = '৳' + bal.toFixed(0);
+    Session.setWallet(bal);
+  }
+
+  /* Profile */
+  if (profile.status === 'fulfilled' && profile.value?.data) {
+    const p = profile.value.data;
+    if (p.planName) {
+      document.getElementById('profilePlan').textContent = p.planName + ' Plan';
+    }
+    if (p.createdAt) {
+      const d = new Date(parseInt(p.createdAt));
+      document.getElementById('profileJoined').textContent =
+        'Joined ' + d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+    }
+  }
+
+  /* Subscription status card */
+  if (subStatus.status === 'fulfilled' && subStatus.value?.data?.hasSubscription) {
+    const s = subStatus.value.data;
+    const card = document.getElementById('subStatusCard');
+    card.className = 'sub-status-card active-sub';
+    card.style.display = 'flex';
+    document.getElementById('subStatusIcon').className = 'sub-status-icon active';
+    document.getElementById('subStatusIcon').innerHTML =
+      `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+    document.getElementById('subStatusTitle').textContent = (s.planName || 'Pro') + ' — Active';
+    document.getElementById('subStatusDesc').textContent  = 'Premium subscription চলছে';
+    if (s.expiresAt && s.expiresAt > 0) {
+      const exp = document.getElementById('subStatusExpiry');
+      exp.textContent = 'Expires ' + new Date(s.expiresAt).toLocaleDateString('en-US',{day:'numeric',month:'short',year:'numeric'});
+      exp.style.display = 'block';
+    }
+    // Hide upgrade strip if already subscribed
+    document.getElementById('upgradeStrip').style.display = 'none';
+    document.getElementById('profilePlan').className = 'pbadge pbadge-sub';
+    document.getElementById('profilePlan').textContent = '⭐ ' + (s.planName || 'Pro') + ' Plan';
+  } else {
+    // Fallback: localStorage থেকে local subscription data দেখাও
+    const localSub = JSON.parse(localStorage.getItem('wevlo_subscription') || 'null');
+    if (localSub?.active && localSub?.planName) {
+      const now = Date.now();
+      const isExpired = localSub.expiresAt > 0 && localSub.expiresAt < now;
+      if (!isExpired) {
+        const card = document.getElementById('subStatusCard');
+        card.className = 'sub-status-card active-sub';
+        card.style.display = 'flex';
+        document.getElementById('subStatusIcon').className = 'sub-status-icon active';
+        document.getElementById('subStatusIcon').innerHTML =
+          `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+        document.getElementById('subStatusTitle').textContent = localSub.planName + ' — Active';
+        document.getElementById('subStatusDesc').textContent  = 'Premium subscription চলছে';
+        if (localSub.expiresAt && localSub.expiresAt > 0) {
+          const exp = document.getElementById('subStatusExpiry');
+          exp.textContent = 'Expires ' + new Date(localSub.expiresAt).toLocaleDateString('en-US',{day:'numeric',month:'short',year:'numeric'});
+          exp.style.display = 'block';
+        }
+        document.getElementById('upgradeStrip').style.display = 'none';
+        document.getElementById('profilePlan').className = 'pbadge pbadge-sub';
+        document.getElementById('profilePlan').textContent = '⭐ ' + localSub.planName + ' Plan';
+      }
+    }
+  }
+
+  /* Transactions */
+  if (trx.status === 'fulfilled') {
+    const list = trx.value?.data || trx.value?.transactions || [];
+    const purchases = list.filter(t => t.type === 'Purchase' || t.type === 'debit');
+    document.getElementById('statDownloads').textContent = purchases.length;
+
+    if (!list.length) {
+      document.getElementById('trxContent').innerHTML = `
+        <div class="empty-state" style="padding:32px 0">
+          <div class="icon">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1" ry="1"/></svg>
+          </div>
+          <h3>No transactions yet</h3>
+          <p>Wallet recharge করলে এখানে দেখাবে</p>
+        </div>`;
+      return;
+    }
+
+    document.getElementById('trxContent').innerHTML = list.map(t => {
+      const type = (t.type || '').toLowerCase();
+      const isSub    = type === 'subscription' || type === 'plan';
+      const isCredit = type === 'deposit' || type === 'credit' || type === 'recharge';
+      const cls      = isSub ? 'sub' : isCredit ? 'credit' : 'debit';
+      const iconSvg  = isSub
+        ? `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`
+        : isCredit
+        ? `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>`
+        : `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>`;
+
+      const amountSign = isCredit ? '+' : '-';
+      const dateStr = t.timestamp
+        ? new Date(parseInt(t.timestamp)).toLocaleDateString('en-US',{day:'numeric',month:'short',year:'numeric'})
+        : '—';
+      const methodLabel = t.method
+        ? `<span class="trx-method-chip">${t.method}</span>` : '';
+
+      return `
+      <div class="trx-item">
+        <div class="trx-icon ${cls}">${iconSvg}</div>
+        <div class="trx-info">
+          <div class="trx-name">${t.item || t.description || t.type || 'Transaction'}</div>
+          <div class="trx-date">
+            ${dateStr}${methodLabel}
+            ${t.trxID ? `<span class="trx-trxid">${t.trxID}</span>` : ''}
+          </div>
+        </div>
+        <div class="trx-amount ${isCredit?'credit':'debit'}">${amountSign}৳${parseFloat(t.amount||0).toFixed(0)}</div>
+      </div>`;
+    }).join('');
+  }
+}
+
+/* ════════════════════════════════════════════
+   RECHARGE MODAL
+════════════════════════════════════════════ */
+function openRechargeModal() {
+  rechargeAmount = 0;
+  document.getElementById('rechargeAmount').value = '';
+  document.getElementById('rBkashAmountShow').textContent = '৳—';
+  document.getElementById('rNagadAmountShow').textContent = '৳—';
+  ['rBkashTrxId','rNagadTrxId'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  ['rBkashStatusMsg','rNagadStatusMsg'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.className = 'pay-status-msg'; el.textContent = ''; }
+  });
+  document.querySelectorAll('.amount-chip').forEach(c => c.classList.remove('active'));
+  _resetRBtn('rBkashVerifyBtn'); _resetRBtn('rNagadVerifyBtn');
+  rSwitchTab('bkash', document.querySelector('#rechargeModal .pay-tab'));
+  document.getElementById('rechargeModal').classList.add('open');
+}
+function closeRechargeModal() {
+  document.getElementById('rechargeModal').classList.remove('open');
+}
+
+function selectAmount(amt) {
+  rechargeAmount = amt;
+  document.getElementById('rechargeAmount').value = amt;
+  document.querySelectorAll('.amount-chip').forEach(c => {
+    c.classList.toggle('active', parseInt(c.textContent.replace('৳','')) === amt);
+  });
+  document.getElementById('rBkashAmountShow').textContent = '৳' + amt;
+  document.getElementById('rNagadAmountShow').textContent = '৳' + amt;
+}
+function onAmountInput() {
+  const val = parseInt(document.getElementById('rechargeAmount').value) || 0;
+  rechargeAmount = val;
+  document.querySelectorAll('.amount-chip').forEach(c => c.classList.remove('active'));
+  document.getElementById('rBkashAmountShow').textContent = val ? '৳' + val : '৳—';
+  document.getElementById('rNagadAmountShow').textContent = val ? '৳' + val : '৳—';
+}
+
+function rSwitchTab(tab, el) {
+  document.querySelectorAll('#rechargeModal .pay-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('#rechargeModal .pay-panel').forEach(p => p.classList.remove('active'));
+  if (el) el.classList.add('active');
+  const panel = document.getElementById('rPay' + tab.charAt(0).toUpperCase() + tab.slice(1));
+  if (panel) panel.classList.add('active');
+}
+
+function rCopyNumber(id) {
+  const num = document.getElementById(id)?.textContent?.trim();
+  if (!num || num.includes('X') || num === 'Loading…') return;
+  navigator.clipboard.writeText(num).then(() => showToast('Number copied!', 'success'));
+}
+
+function _resetRBtn(id) {
+  const btn = document.getElementById(id);
+  if (!btn) return;
+  btn.disabled = false;
+  btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Verify & Recharge`;
+}
+
+async function rVerifyAndSubmit(method) {
+  const amt = rechargeAmount;
+  if (!amt || amt < 10) {
+    showToast('কমপক্ষে ৳10 amount দিন', 'error'); return;
+  }
+  const cap   = method.charAt(0).toUpperCase() + method.slice(1);
+  const trxEl = document.getElementById('r' + cap + 'TrxId');
+  const errEl = document.getElementById('r' + cap + 'TrxErr');
+  const btn   = document.getElementById('r' + cap + 'VerifyBtn');
+  const msgEl = document.getElementById('r' + cap + 'StatusMsg');
+  const trxId = (trxEl?.value || '').trim().toUpperCase();
+
+  if (!trxId || trxId.length < 5) { errEl.classList.add('show'); return; }
+  errEl.classList.remove('show');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="pay-spin"></span> Verifying…';
+  msgEl.className = 'pay-status-msg loading';
+  msgEl.textContent = '⏳ Transaction verify করা হচ্ছে…';
+
+  const url = PAY_SCRIPT_URL + '?trxID=' + trxId + '&apiKey=' + PAY_API_KEY + '&amount=' + amt;
+
+  try {
+    const res  = await fetch(url);
+    const data = await res.json();
+
+    if (data.status === 'success') {
+      msgEl.className = 'pay-status-msg success';
+      msgEl.innerHTML = '✅ Payment verified!<br>Amount: ৳' + data.amount + ' | TrxID: ' + data.trxID;
+      btn.innerHTML   = '✅ Verified!';
+
+      /* Add balance to wallet via API */
+      try {
+        await Api.updateWallet(amt, trxId);
+        const curBal = parseFloat(Session.getWallet() || '0');
+        const newBal = curBal + parseFloat(amt);
+        Session.setWallet(newBal.toFixed(2));
+        document.getElementById('statWalletBal').textContent = '৳' + newBal.toFixed(0);
+      } catch(e) {}
+
+      setTimeout(() => {
+        closeRechargeModal();
+        showToast('✅ Wallet Recharge সম্পন্ন! ৳' + amt + ' যোগ হয়েছে 🎉', 'success');
+        init();
+      }, 1800);
+    } else {
+      msgEl.className = 'pay-status-msg error';
+      msgEl.innerHTML = '❌ Transaction ID টি সঠিক নয়। সঠিক TrxID দিয়ে আবার চেষ্টা করুন।<br><small>' + (data.message || '') + '</small>';
+      _resetRBtn(btn.id);
+      btn.disabled = false;
+    }
+  } catch(e) {
+    msgEl.className = 'pay-status-msg error';
+    msgEl.textContent = '❌ Network error। Internet connection চেক করে আবার চেষ্টা করুন।';
+    _resetRBtn(btn.id);
+    btn.disabled = false;
+  }
+}
+
+/* ════════════════════════════════════════════
+   EDIT PROFILE MODAL
+════════════════════════════════════════════ */
+function openEditModal() {
+  document.getElementById('editName').value  = Session.getName() || '';
+  document.getElementById('editEmail').value = Session.getEmail() || '';
+  const msgEl = document.getElementById('editStatusMsg');
+  msgEl.className = 'pay-status-msg'; msgEl.textContent = '';
+  document.getElementById('editProfileModal').classList.add('open');
+}
+function closeEditModal() {
+  document.getElementById('editProfileModal').classList.remove('open');
+}
+async function saveProfile() {
+  const name  = document.getElementById('editName').value.trim();
+  const btn   = document.getElementById('saveProfileBtn');
+  const msgEl = document.getElementById('editStatusMsg');
+
+  if (!name) {
+    msgEl.className = 'pay-status-msg error';
+    msgEl.textContent = '❌ Name খালি রাখা যাবে না।';
+    return;
+  }
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+  msgEl.className = 'pay-status-msg loading';
+  msgEl.textContent = '⏳ Saving changes…';
+
+  try {
+    /* Try updateProfile API if exists, otherwise just update session */
+    if (typeof Api.updateProfile === 'function') {
+      await Api.updateProfile({ name });
+    }
+    /* Update local session */
+    if (typeof Session.setName === 'function') Session.setName(name);
+    else localStorage.setItem('wevlo_name', name);
+
+    document.getElementById('profileName').textContent = name;
+    const initials = name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+    document.getElementById('profileAvatar').textContent = initials;
+
+    msgEl.className = 'pay-status-msg success';
+    msgEl.textContent = '✅ Profile updated!';
+    btn.textContent = '✅ Saved!';
+    setTimeout(() => closeEditModal(), 1200);
+  } catch(e) {
+    msgEl.className = 'pay-status-msg error';
+    msgEl.textContent = '❌ Update failed. Try again.';
+    btn.disabled = false;
+    btn.textContent = 'Save Changes';
+  }
+}
+
+init();
+</script>
+<script src="../js/code.js"></script>
+</body>
+</html>

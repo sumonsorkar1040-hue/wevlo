@@ -1,0 +1,178 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Preview — Wevlo</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; overflow: hidden; background: #1e1e2e; }
+    
+    /* প্রিভিউ ফ্রেম এখন পুরো স্ক্রিন জুড়ে থাকবে */
+    #previewFrame {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: #fff;
+    }
+
+    #errorBox {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: #111;
+      font-family: sans-serif;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      color: #fff;
+    }
+    
+    .back-btn {
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      padding: 10px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 8px;
+      font-size: .9rem;
+    }
+  </style>
+</head>
+<body data-skip-native-ad="true">
+
+  <iframe id="previewFrame" sandbox="allow-scripts allow-same-origin allow-forms allow-modals allow-popups allow-top-navigation-by-user-activation"></iframe>
+
+  <div id="errorBox">
+    <span style="font-size:2.5rem">⚠️</span>
+    <p style="color:#aaa;font-size:.95rem">Preview পাওয়া যায়নি।</p>
+    <button class="back-btn" onclick="goBack()">← Editor এ ফিরুন</button>
+  </div>
+
+  <script>
+    // ── WevloDB mini (preview শুধু read করে) ──────────────────
+    var WevloDB = (function(){
+      var DB_NAME = 'wevloDB', DB_VERSION = 1, STORE = 'kvStore', _db = null;
+      function open() {
+        if (_db) return Promise.resolve(_db);
+        return new Promise(function(resolve, reject) {
+          var req = indexedDB.open(DB_NAME, DB_VERSION);
+          req.onupgradeneeded = function(e){ e.target.result.createObjectStore(STORE); };
+          req.onsuccess = function(e){ _db = e.target.result; resolve(_db); };
+          req.onerror   = function(e){ reject(e.target.error); };
+        });
+      }
+      function get(key) {
+        return open().then(function(db){
+          return new Promise(function(resolve, reject){
+            var req = db.transaction(STORE,'readonly').objectStore(STORE).get(key);
+            req.onsuccess = function(){ resolve(req.result ?? null); };
+            req.onerror   = function(e){ reject(e.target.error); };
+          });
+        });
+      }
+      return {
+        getPreview: function(){ return get('wevlo_preview'); }
+      };
+    })();
+    // ─────────────────────────────────────────────────────────
+
+    var _files = {};
+    var _curHtmlFile = '';
+
+    function goBack() {
+      if (history.length > 1) history.back();
+      else window.location.href = '/editor';
+    }
+
+    function inlineSingle(htmlFile) {
+      var html = _files[htmlFile] || '';
+      var baseDir = htmlFile.includes('/') ? htmlFile.substring(0, htmlFile.lastIndexOf('/') + 1) : '';
+      
+      function res(p) {
+        var c = p.replace(/^\.\//, '');
+        if (_files[c] !== undefined) return c;
+        if (_files[baseDir + c] !== undefined) return baseDir + c;
+        return null;
+      }
+
+      // CSS Inline
+      html = html.replace(/<link[^>]+rel=["']stylesheet["'][^>]*href=["']([^"']+)["'][^>]*\/?>/gi, function(m, h) {
+        var k = res(h); return k !== null ? '<style>' + _files[k] + '</style>' : m;
+      });
+
+      // JS Inline
+      html = html.replace(/<script([^>]*) src=["']([^"']+)["']([^>]*)><\/script>/gi, function(m, a, s, b) {
+        var k = res(s); return k !== null ? '<script' + a + b + '>' + _files[k] + '<' + '/script>' : m;
+      });
+
+      // Link intercept inject
+      var navJs = '<script>(function(){' +
+        'document.addEventListener("click",function(e){' +
+          'var a=e.target.closest("a");if(!a)return;' +
+          'var href=a.getAttribute("href");' +
+          'if(!href||/^(https?:|#|mailto:|tel:)/.test(href))return;' +
+          'var fname=href.split("/").pop().split("?")[0];' +
+          'window.parent.postMessage({type:"wevlo_nav",href:href,fname:fname},"*");' +
+          'e.preventDefault();' +
+        '});' +
+      '})();<' + '/script>';
+      
+      html = html.replace('</body>', navJs + '</body>');
+      return html;
+    }
+
+    function showPage(htmlFile) {
+      _curHtmlFile = htmlFile;
+      document.getElementById('previewFrame').srcdoc = inlineSingle(htmlFile);
+    }
+
+    // iframe থেকে navigation message শোনা
+    window.addEventListener('message', function(e) {
+      if (!e.data || e.data.type !== 'wevlo_nav') return;
+      var fname = e.data.fname;
+      var href = e.data.href;
+      var allHtml = Object.keys(_files).filter(function(f){ return f.endsWith('.html'); });
+      var target = allHtml.find(function(f){
+        return f === href || f === fname || f.endsWith('/' + fname);
+      });
+      if (target) showPage(target);
+    });
+
+    // Initial Load
+    (async function(){
+      var payload = null;
+      // IndexedDB → sessionStorage fallback
+      try { payload = await WevloDB.getPreview(); } catch(e){}
+      if (!payload) { try { payload = sessionStorage.getItem('wevlo_preview'); } catch(e){} }
+
+      if (!payload) {
+        document.getElementById('previewFrame').style.display = 'none';
+        document.getElementById('errorBox').style.display = 'flex';
+        return;
+      }
+
+      try {
+        var data = JSON.parse(payload);
+        _files = data.files || {};
+        showPage(data.htmlFile);
+      } catch(e) {
+        document.getElementById('previewFrame').style.display = 'none';
+        document.getElementById('errorBox').style.display = 'flex';
+      }
+    })();
+  </script>
+<script src="../js/code.js"></script>
+</body>
+</html>

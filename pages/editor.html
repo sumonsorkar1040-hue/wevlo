@@ -1,0 +1,2136 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Wevlo — Code Editor</title>
+<link rel="stylesheet" href="../css/style.css"/>
+<!-- CodeMirror -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/foldgutter.min.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/dialog/dialog.min.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/show-hint.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/xml/xml.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/css/css.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/htmlmixed/htmlmixed.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/clike/clike.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/groovy/groovy.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/markdown/markdown.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closetag.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/comment/comment.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/search/search.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/search/searchcursor.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/dialog/dialog.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/foldcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/foldgutter.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/brace-fold.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/xml-fold.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/show-hint.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/html-hint.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/css-hint.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  display: flex; flex-direction: column;
+  background: #1e1e1e; color: #ccc;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+/* ── Topbar ── */
+.editor-topbar {
+  height: 48px; background: #252526;
+  border-bottom: 1px solid #3c3c3c;
+  display: flex; align-items: center; gap: 2px;
+  padding: 0 10px; flex-shrink: 0; z-index: 100;
+  overflow-x: auto; overflow-y: hidden;
+}
+.editor-topbar::-webkit-scrollbar { display: none; }
+
+.editor-topbar-logo {
+  display: flex; align-items: center; gap: 8px;
+  font-weight: 800; font-size: .9rem; color: #fff;
+  padding-right: 12px; margin-right: 4px;
+  border-right: 1px solid #3c3c3c;
+  cursor: pointer; text-decoration: none;
+  flex-shrink: 0;
+}
+.editor-topbar-logo-icon {
+  width: 28px; height: 28px;
+  background: #2563eb; border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.topbar-btn {
+  display: flex; align-items: center; gap: 5px;
+  padding: 5px 9px; border-radius: 5px;
+  font-size: .78rem; font-weight: 600;
+  cursor: pointer; border: none;
+  transition: background .15s;
+  color: #aaa; background: transparent;
+  white-space: nowrap; flex-shrink: 0;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+.topbar-btn:hover { background: #3c3c3c; color: #fff; }
+.topbar-btn.primary { background: #2563eb; color: #fff; }
+.topbar-btn.primary:hover { background: #1d4ed8; }
+.topbar-btn.success { background: #10b981; color: #fff; }
+.topbar-btn.success:hover { background: #059669; }
+.topbar-btn.active  { color: #f59e0b; }
+
+.topbar-sep    { width: 1px; height: 22px; background: #3c3c3c; margin: 0 3px; flex-shrink: 0; }
+.topbar-spacer { flex: 1; min-width: 8px; }
+
+.project-name-badge {
+  font-size: .72rem; color: #888;
+  padding: 3px 8px; border-radius: 4px;
+  background: #1e1e1e; border: 1px solid #3c3c3c;
+  max-width: 140px; overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap;
+  flex-shrink: 0;
+}
+.save-indicator { color: #f59e0b; display: none; }
+.save-indicator .unsaved-text { display: inline; }
+@media (max-width: 700px) {
+  .save-indicator { display: none !important; }
+}
+
+/* ── Editor body ── */
+.editor-body { flex: 1; display: flex; overflow: hidden; }
+
+/* ── File sidebar ── */
+.file-sidebar {
+  width: 210px; background: #252526;
+  border-right: 1px solid #3c3c3c;
+  display: flex; flex-direction: column;
+  flex-shrink: 0; transition: width .2s;
+}
+.file-sidebar.collapsed { width: 0; overflow: hidden; }
+.file-sidebar-header {
+  padding: 10px 12px 8px;
+  font-size: .68rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .08em;
+  color: #666; display: flex; align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #3c3c3c;
+}
+.file-sidebar-add {
+  background: none; border: none; color: #666;
+  cursor: pointer; padding: 2px 5px;
+  border-radius: 4px; transition: all .15s;
+  display: flex; align-items: center;
+}
+.file-sidebar-add:hover { color: #fff; background: #3c3c3c; }
+
+/* ── Context Menu ── */
+.ctx-menu {
+  position: fixed; z-index: 9999;
+  background: #252526; border: 1px solid #454545;
+  border-radius: 6px; padding: 4px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.5);
+  min-width: 160px; font-size: .8rem;
+}
+.ctx-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 12px; color: #ccc; cursor: pointer;
+  border-radius: 4px; transition: background .1s;
+  border: none; background: none; width: 100%; text-align: left;
+  font-family: inherit; font-size: .8rem;
+}
+.ctx-item:hover { background: #2a2d2e; color: #fff; }
+.ctx-item.danger:hover { background: rgba(239,68,68,.15); color: #ef4444; }
+.ctx-divider { height: 1px; background: #3c3c3c; margin: 4px 0; }
+
+.file-list { flex: 1; overflow-y: auto; padding: 4px 0; }
+.file-list::-webkit-scrollbar { width: 4px; }
+.file-list::-webkit-scrollbar-thumb { background: #3c3c3c; }
+
+.file-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 12px; cursor: pointer;
+  font-size: .8rem; color: #bbb;
+  transition: background .12s; position: relative;
+}
+.file-item:hover { background: #2a2d2e; }
+.file-item.active { background: #37373d; color: #fff; }
+.file-icon { display: flex; align-items: center; flex-shrink: 0; }
+.file-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.file-del {
+  opacity: 0; background: none; border: none;
+  color: #888; cursor: pointer; padding: 2px;
+  border-radius: 3px; transition: all .12s;
+  display: flex; align-items: center;
+}
+.file-item:hover .file-del { opacity: 1; }
+.file-del:hover { color: #ef4444; background: rgba(239,68,68,.15); }
+.unsaved-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: #f59e0b; flex-shrink: 0;
+}
+
+/* ── Folder tree ── */
+.folder-row {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 12px;
+  font-size: .75rem; color: #888;
+  font-weight: 700; user-select: none;
+  cursor: pointer;
+  transition: color .12s;
+}
+.folder-row:hover { color: #ccc; }
+.folder-chevron {
+  transition: transform .2s ease;
+  flex-shrink: 0;
+  display: flex; align-items: center;
+}
+.folder-chevron.open { transform: rotate(90deg); }
+.folder-icon { flex-shrink: 0; }
+.folder-children { display: block; }
+.folder-children.collapsed { display: none; }
+.file-item.indented { padding-left: 28px; }
+
+/* ── Editor main ── */
+.editor-main { flex: 1; display: flex; overflow: hidden; flex-direction: column; }
+
+.tabs-bar {
+  background: #252526;
+  border-bottom: 1px solid #3c3c3c;
+  display: flex; overflow-x: auto; flex-shrink: 0;
+}
+.tabs-bar::-webkit-scrollbar { height: 3px; }
+.tabs-bar::-webkit-scrollbar-thumb { background: #555; }
+
+.editor-tab {
+  display: flex; align-items: center; gap: 7px;
+  padding: 8px 14px;
+  font-size: .78rem; color: #888;
+  cursor: pointer; white-space: nowrap;
+  border-right: 1px solid #3c3c3c;
+  transition: background .12s; flex-shrink: 0;
+}
+.editor-tab.active {
+  background: #1e1e1e; color: #fff;
+  border-top: 2px solid #2563eb; padding-top: 6px;
+}
+.tab-close {
+  background: none; border: none; color: #666;
+  cursor: pointer; padding: 2px; line-height: 1;
+  border-radius: 3px; display: flex; align-items: center;
+  transition: all .12s;
+}
+.tab-close:hover { background: #555; color: #fff; }
+.tab-dot { width: 6px; height: 6px; border-radius: 50%; background: #f59e0b; }
+
+/* ── Split view ── */
+.split-view { flex: 1; display: flex; overflow: hidden; }
+.code-pane  { flex: 1; overflow: hidden; position: relative; }
+.preview-pane {
+  width: 45%; border-left: 2px solid #3c3c3c;
+  display: none; flex-direction: column;
+  background: #fff; flex-shrink: 0;
+}
+.preview-pane.open { display: flex; }
+.preview-toolbar {
+  background: #2d2d2d; border-bottom: 1px solid #3c3c3c;
+  padding: 5px 10px; display: flex; align-items: center; gap: 8px;
+  font-size: .72rem; color: #888; flex-shrink: 0;
+}
+.preview-url {
+  flex: 1; background: #1e1e1e;
+  border: 1px solid #3c3c3c; border-radius: 4px;
+  padding: 3px 8px; color: #ccc;
+  font-size: .72rem; font-family: monospace;
+}
+.preview-frame { flex: 1; border: none; background: #fff; }
+.preview-ctrl {
+  background: #3c3c3c; border: none; color: #aaa;
+  cursor: pointer; padding: 4px 6px;
+  border-radius: 4px; display: flex; align-items: center;
+  transition: all .12s;
+}
+.preview-ctrl:hover { background: #2563eb; color: #fff; }
+
+/* ── CodeMirror ── */
+.CodeMirror {
+  height: 100% !important;
+  font-size: 14px;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace !important;
+  line-height: 1.65 !important;
+}
+.CodeMirror-scroll { overflow: auto !important; }
+
+/* ── Symbol bar ── */
+.symbol-bar {
+  height: 38px; background: #1e1e1e;
+  border-top: 1px solid #2d2d2d;
+  display: flex; align-items: center;
+  padding: 0 6px; gap: 3px;
+  overflow-x: auto; flex-shrink: 0;
+}
+.symbol-bar::-webkit-scrollbar { display: none; }
+.sym-btn {
+  padding: 4px 8px; border-radius: 4px;
+  background: #2d2d2d; color: #aaa;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .78rem; border: none;
+  cursor: pointer; white-space: nowrap;
+  transition: all .12s; flex-shrink: 0;
+}
+.sym-btn:hover { background: #2563eb; color: #fff; }
+
+/* ── Find bar ── */
+.find-bar {
+  background: #252526; border-top: 1px solid #3c3c3c;
+  padding: 8px 12px; display: none; flex-shrink: 0;
+  gap: 8px; flex-wrap: wrap;
+}
+.find-bar.open { display: flex; align-items: center; }
+.find-input {
+  background: #1e1e1e; border: 1px solid #3c3c3c;
+  border-radius: 4px; padding: 5px 10px;
+  color: #ccc; font-size: .78rem; font-family: monospace;
+  width: 180px;
+}
+.find-input:focus { border-color: #2563eb; outline: none; }
+.find-bar-btn {
+  padding: 5px 9px; border-radius: 4px;
+  background: #3c3c3c; color: #ccc; border: none;
+  font-size: .75rem; cursor: pointer;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  white-space: nowrap; flex-shrink: 0;
+}
+.find-bar-btn:hover { background: #2563eb; color: #fff; }
+.find-result { font-size: .72rem; color: #888; }
+
+/* ── Status bar ── */
+.status-bar {
+  height: 24px; background: #007acc;
+  display: flex; align-items: center; gap: 16px;
+  padding: 0 12px; flex-shrink: 0;
+  font-size: .68rem; color: rgba(255,255,255,.85);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* ── Dark modals ── */
+.dark-modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.75);
+  z-index: 2000;
+  display: none; align-items: center; justify-content: center;
+  padding: 20px;
+}
+.dark-modal-overlay.open { display: flex; }
+.dark-modal {
+  background: #252526; border: 1px solid #3c3c3c;
+  border-radius: 12px; padding: 22px;
+  width: 100%; max-width: 440px;
+  animation: fadeIn .2s ease;
+}
+.dark-modal h3 { color: #fff; margin-bottom: 16px; font-size: 1rem; }
+.dark-input {
+  width: 100%; background: #1e1e1e;
+  border: 1px solid #3c3c3c; border-radius: 6px;
+  padding: 9px 12px; color: #ccc; font-size: .875rem;
+  margin-bottom: 12px; font-family: 'JetBrains Mono', monospace;
+}
+.dark-input:focus { border-color: #2563eb; outline: none; }
+.dark-modal-btns { display: flex; gap: 8px; justify-content: flex-end; }
+.dark-btn {
+  padding: 7px 16px; border-radius: 6px;
+  font-size: .825rem; font-weight: 600;
+  cursor: pointer; border: none;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+.dark-btn.cancel  { background: #3c3c3c; color: #ccc; }
+.dark-btn.confirm { background: #2563eb; color: #fff; }
+.dark-btn.danger  { background: #ef4444; color: #fff; }
+
+/* File type grid */
+.file-type-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin: 12px 0; }
+.file-type-opt {
+  border: 1.5px solid #3c3c3c; border-radius: 8px;
+  padding: 14px 8px; text-align: center; cursor: pointer;
+  transition: all .15s;
+}
+.file-type-opt:hover, .file-type-opt.selected {
+  border-color: #2563eb; background: rgba(37,99,235,.12);
+}
+.file-type-opt .ft-icon {
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 6px; color: #888;
+}
+.file-type-opt.selected .ft-icon { color: #60a5fa; }
+.file-type-opt .ft-name { font-size: .75rem; color: #aaa; font-weight: 600; }
+.file-type-opt.selected .ft-name { color: #fff; }
+
+@keyframes fadeIn {
+  from { opacity:0; transform: translateY(8px); }
+  to   { opacity:1; transform: translateY(0); }
+}
+/* ── Three-dot menu ── */
+.more-menu-btn {
+  display: none;
+  align-items: center; justify-content: center;
+  width: 34px; height: 34px;
+  border-radius: 6px; background: transparent;
+  border: none; color: #aaa; cursor: pointer;
+  flex-shrink: 0; transition: background .15s;
+}
+.more-menu-btn:hover { background: #3c3c3c; color: #fff; }
+
+.more-menu-dropdown {
+  position: fixed;
+  top: 52px; right: 8px;
+  background: #252526;
+  border: 1px solid #454545;
+  border-radius: 10px;
+  padding: 6px;
+  z-index: 5000;
+  min-width: 210px;
+  box-shadow: 0 12px 32px rgba(0,0,0,.6);
+  display: none;
+  flex-direction: column;
+  gap: 2px;
+  animation: fadeIn .15s ease;
+}
+.more-menu-dropdown.open { display: flex; }
+
+.mm-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; border-radius: 7px;
+  color: #ccc; cursor: pointer;
+  font-size: .82rem; font-weight: 600;
+  border: none; background: none;
+  width: 100%; text-align: left;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  transition: background .12s;
+}
+.mm-item:hover { background: #2a2d2e; color: #fff; }
+.mm-item.success { color: #10b981; }
+.mm-item.primary { color: #60a5fa; }
+.mm-item.warning { color: #f59e0b; }
+.mm-sep { height: 1px; background: #3c3c3c; margin: 4px 2px; }
+.mm-label {
+  font-size: .65rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .08em;
+  color: #555; padding: 6px 14px 2px;
+}
+
+@media (max-width: 700px) {
+  .preview-pane  { display: none !important; }
+  .topbar-btn span.label { display: none; }
+
+  /* Mobile topbar compact */
+  .editor-topbar {
+    padding: 0 6px;
+    gap: 4px;
+  }
+
+  /* Desktop-only buttons লুকাও */
+  .topbar-btn.desktop-only { display: none !important; }
+  .topbar-sep.desktop-only { display: none !important; }
+
+  /* Three-dot দেখাও */
+  .more-menu-btn { display: flex; }
+
+  /* Mobile: sidebar overlay হিসেবে দেখাবে */
+  .file-sidebar {
+    position: fixed !important;
+    top: 0; left: 0;
+    width: 75vw !important;
+    max-width: 280px;
+    height: 100dvh !important;
+    z-index: 1000;
+    background: #1e1e1e;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+    overflow-y: auto !important;
+    box-shadow: 4px 0 24px rgba(0,0,0,.5);
+  }
+  .file-sidebar.mobile-open {
+    transform: translateX(0);
+  }
+  /* Backdrop */
+  #sidebarBackdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.45);
+    z-index: 999;
+  }
+  #sidebarBackdrop.show { display: block; }
+
+  /* Mobile symbol bar বড় করো */
+  .sym-btn {
+    padding: 6px 10px;
+    font-size: .82rem;
+  }
+  .symbol-bar { height: 44px; }
+
+  /* Status bar ছোট করো */
+  .status-bar { font-size: .6rem; gap: 10px; }
+
+  /* mobile-only শুধু মোবাইলে দেখাবে */
+  .mobile-only { display: flex !important; }
+
+  /* Project name badge মোবাইলে লুকাও */
+  .project-name-badge { display: none !important; }
+
+  /* Mobile action icon বড় করো */
+  .mobile-icon-btn { padding: 6px 10px !important; }
+  .mobile-icon-btn svg { width: 18px !important; height: 18px !important; }
+  #mobileSaveBtn svg, #mobileRunBtn svg { width: 18px !important; height: 18px !important; }
+  #mobileSaveBtn, #mobileRunBtn { padding: 6px 11px !important; }
+
+  /* Save/Play/Build গ্রুপ gap */
+  .mobile-action-group {
+    display: flex !important;
+    align-items: center;
+    gap: 5px;
+    flex-shrink: 0;
+  }
+  .more-menu-btn { width: 38px !important; height: 38px !important; }
+  .topbar-spacer { flex: 0 !important; min-width: 0 !important; }
+
+  /* Undo/Redo বাটন বড় ও ফাঁকা কম */
+  button[onclick="editorUndo()"].mobile-icon-btn,
+  button[onclick="editorRedo()"].mobile-icon-btn {
+    padding: 6px 8px !important;
+    margin: 0 !important;
+  }
+  button[onclick="editorUndo()"].mobile-icon-btn svg,
+  button[onclick="editorRedo()"].mobile-icon-btn svg {
+    width: 22px !important; height: 22px !important;
+  }
+  .editor-topbar { gap: 1px !important; }
+
+  /* Sidebar header নতুন ফাইল/ফোল্ডার আইকন বড় */
+  .file-sidebar-add svg { width: 18px !important; height: 18px !important; }
+  .file-sidebar-add { padding: 5px 7px !important; }
+  button[onclick="toggleSidebar()"] {
+    padding: 6px 12px !important;
+  }
+  button[onclick="toggleSidebar()"] svg {
+    width: 22px !important; height: 22px !important;
+  }
+
+  /* ফাইল ও ফোল্ডার আইটেম বড় করো */
+  .file-item {
+    font-size: .92rem !important;
+    padding-top: 10px !important;
+    padding-bottom: 10px !important;
+    padding-right: 8px !important;
+    gap: 10px !important;
+  }
+  .file-icon svg { width: 18px !important; height: 18px !important; }
+  .folder-row {
+    font-size: .82rem !important;
+    padding-top: 10px !important;
+    padding-bottom: 10px !important;
+    padding-right: 8px !important;
+    gap: 8px !important;
+  }
+  .folder-icon svg { width: 18px !important; height: 18px !important; }
+  .folder-chevron svg { width: 16px !important; height: 16px !important; }
+  .file-item.indented { padding-left: 34px !important; }
+}
+
+/* desktop-এ mobile-only লুকাও */
+@media (min-width: 701px) {
+  .mobile-only { display: none !important; }
+  .more-menu-dropdown { display: none !important; }
+}
+</style>
+</head>
+<body data-skip-native-ad="true" data-skip-banner-ad="true">
+
+<!-- Mobile sidebar backdrop -->
+<div id="sidebarBackdrop" onclick="closeSidebarMobile()"></div>
+
+<!-- ── Topbar ── -->
+<div class="editor-topbar">
+  <a class="editor-topbar-logo" href="/">
+    <div class="editor-topbar-logo-icon">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    Wevlo
+  </a>
+
+  <!-- Toggle sidebar -->
+  <button class="topbar-btn" onclick="toggleSidebar()" title="Toggle Files (Ctrl+B)">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+    <span class="label">Files</span>
+  </button>
+  <div class="topbar-sep desktop-only"></div>
+
+  <!-- Undo / Redo (desktop only) -->
+  <button class="topbar-btn desktop-only" onclick="editorUndo()" title="Undo (Ctrl+Z)">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg>
+  </button>
+  <button class="topbar-btn desktop-only" onclick="editorRedo()" title="Redo (Ctrl+Y)">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 14 20 9 15 4"/><path d="M4 20v-7a4 4 0 0 1 4-4h12"/></svg>
+  </button>
+  <div class="topbar-sep desktop-only"></div>
+
+  <!-- Find / Line / Comment / Format (desktop only) -->
+  <button class="topbar-btn desktop-only" onclick="toggleFindBar()" title="Find &amp; Replace (Ctrl+H)">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <span class="label">Find</span>
+  </button>
+  <button class="topbar-btn desktop-only" onclick="openJumpToLine()" title="Jump to Line">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/></svg>
+    <span class="label">Line</span>
+  </button>
+  <button class="topbar-btn desktop-only" onclick="toggleComment()" title="Comment (Ctrl+/)">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    <span class="label">Comment</span>
+  </button>
+  <button class="topbar-btn desktop-only" onclick="formatCode()" title="Format Code">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="10" x2="3" y2="10"/><polyline points="7 6 3 10 7 14"/><line x1="3" y1="18" x2="21" y2="18"/><polyline points="17 14 21 18 17 22"/></svg>
+    <span class="label">Format</span>
+  </button>
+  <div class="topbar-sep desktop-only"></div>
+
+  <!-- Wrap / Font size (desktop only) -->
+  <button class="topbar-btn desktop-only" onclick="toggleWordWrap()" id="wrapBtn" title="Word Wrap">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+  </button>
+  <button class="topbar-btn desktop-only" onclick="changeFontSize(-1)" title="Decrease font size" style="font-weight:700;font-size:.9rem">A-</button>
+  <button class="topbar-btn desktop-only" onclick="changeFontSize(1)"  title="Increase font size" style="font-weight:700;font-size:.9rem">A+</button>
+  <div class="topbar-sep desktop-only"></div>
+
+  <!-- Project badge + unsaved -->
+  <span class="project-name-badge" id="projectNameBadge">Loading…</span>
+  <span class="topbar-btn save-indicator" id="saveIndicator">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="#f59e0b"><circle cx="12" cy="12" r="10"/></svg>
+    <span class="unsaved-text">Unsaved</span>
+  </span>
+
+  <!-- Mobile: Undo / Redo -->
+  <button class="topbar-btn mobile-only mobile-icon-btn" onclick="editorUndo()" title="Undo">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg>
+  </button>
+  <button class="topbar-btn mobile-only mobile-icon-btn" onclick="editorRedo()" title="Redo">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 14 20 9 15 4"/><path d="M4 20v-7a4 4 0 0 1 4-4h12"/></svg>
+  </button>
+
+  <div class="topbar-spacer"></div>
+
+  <!-- Desktop Actions -->
+  <button class="topbar-btn desktop-only" onclick="togglePreview()" id="previewToggleBtn" title="Preview">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+    <span class="label">Preview</span>
+  </button>
+  <button class="topbar-btn success desktop-only" onclick="saveAll()" title="Save All (Ctrl+S)">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+    <span class="label">Save</span>
+  </button>
+  <button class="topbar-btn desktop-only" id="driveBtn" onclick="handleDriveClick()" title="Google Drive Backup">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
+    <span class="label">Drive</span>
+  </button>
+  <button class="topbar-btn primary desktop-only" onclick="runPreview()" title="Run">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+    <span class="label">Run</span>
+  </button>
+  <button class="topbar-btn desktop-only" onclick="Nav.go('/build?p=' + (currentProject?.id||'') + (currentProject?.webviewUrl ? '&url=' + encodeURIComponent(currentProject.webviewUrl) : ''))" title="Build APK">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+    <span class="label">Build APK</span>
+  </button>
+
+  <!-- Mobile: Save + Run + Build -->
+  <div class="mobile-only mobile-action-group">
+  <button class="topbar-btn success" id="mobileSaveBtn" onclick="saveAll()" title="Save">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+  </button>
+  <button class="topbar-btn primary" id="mobileRunBtn" onclick="runPreview()" title="Run">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+  </button>
+  <button class="topbar-btn" style="background:#f59e0b;color:#000;" onclick="Nav.go('/build?p=' + (currentProject?.id||'') + (currentProject?.webviewUrl ? '&url=' + encodeURIComponent(currentProject.webviewUrl) : ''))" title="Build APK">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+  </button>
+  </div>
+
+  <!-- Three-dot more menu -->
+  <button class="more-menu-btn" onclick="toggleMoreMenu()" title="More options" id="moreMenuBtn">
+    <svg width="4" height="16" viewBox="0 0 4 18" fill="currentColor"><circle cx="2" cy="2" r="2"/><circle cx="2" cy="9" r="2"/><circle cx="2" cy="16" r="2"/></svg>
+  </button>
+</div>
+
+<!-- Three-dot dropdown menu -->
+<div class="more-menu-dropdown" id="moreMenuDropdown">
+  <div class="mm-label">সম্পাদনা</div>
+  <button class="mm-item" onclick="editorUndo();closeMoreMenu()">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg>
+    Undo
+  </button>
+  <button class="mm-item" onclick="editorRedo();closeMoreMenu()">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 14 20 9 15 4"/><path d="M4 20v-7a4 4 0 0 1 4-4h12"/></svg>
+    Redo
+  </button>
+  <button class="mm-item" onclick="toggleComment();closeMoreMenu()">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    Comment / Uncomment
+  </button>
+  <button class="mm-item" onclick="formatCode();closeMoreMenu()">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="10" x2="3" y2="10"/><polyline points="7 6 3 10 7 14"/><line x1="3" y1="18" x2="21" y2="18"/><polyline points="17 14 21 18 17 22"/></svg>
+    Format Code
+  </button>
+  <div class="mm-sep"></div>
+  <div class="mm-label">খোঁজা</div>
+  <button class="mm-item" onclick="toggleFindBar();closeMoreMenu()">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    Find &amp; Replace
+  </button>
+  <button class="mm-item" onclick="openJumpToLine();closeMoreMenu()">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/></svg>
+    Jump to Line
+  </button>
+  <div class="mm-sep"></div>
+  <div class="mm-label">দেখা</div>
+  <button class="mm-item" onclick="toggleWordWrap();closeMoreMenu()" id="mmWrapBtn">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+    Word Wrap: ON
+  </button>
+  <button class="mm-item" onclick="changeFontSize(-1)">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    Font Size কমাও (A-)
+  </button>
+  <button class="mm-item" onclick="changeFontSize(1)">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    Font Size বাড়াও (A+)
+  </button>
+  <div class="mm-sep"></div>
+  <div class="mm-label">প্রজেক্ট</div>
+  <button class="mm-item success" onclick="handleDriveClick();closeMoreMenu()">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
+    Google Drive
+  </button>
+  <button class="mm-item warning" onclick="Nav.go('/build?p=' + (currentProject?.id||'') + (currentProject?.webviewUrl ? '&url=' + encodeURIComponent(currentProject.webviewUrl) : ''));closeMoreMenu()">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+    Build APK
+  </button>
+</div>
+
+<!-- ── Editor body ── -->
+<div class="editor-body">
+
+  <!-- File sidebar -->
+  <div class="file-sidebar" id="fileSidebar">
+    <div class="file-sidebar-header">
+      <span>Explorer</span>
+      <div style="display:flex;gap:2px">
+        <button class="file-sidebar-add" onclick="openNewFileModal()" title="New File">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg>
+        </button>
+        <button class="file-sidebar-add" onclick="openNewFolderModal()" title="New Folder">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="file-list" id="fileList"></div>
+  </div>
+
+  <!-- Editor main -->
+  <div class="editor-main">
+
+    <!-- Tabs -->
+    <div class="tabs-bar" id="tabsBar"></div>
+
+    <!-- Split view -->
+    <div class="split-view">
+      <div class="code-pane">
+        <textarea id="codeEditor"></textarea>
+      </div>
+      <div class="preview-pane" id="previewPane">
+        <div class="preview-toolbar">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          <input class="preview-url" id="previewUrl" value="preview" readonly/>
+          <button class="preview-ctrl" onclick="refreshPreview()" title="Refresh">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          </button>
+          <button class="preview-ctrl" onclick="openFullPreview()" title="Open in new tab">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          </button>
+        </div>
+        <iframe class="preview-frame" id="previewFrame" sandbox="allow-scripts allow-same-origin"></iframe>
+      </div>
+    </div>
+
+    <!-- Find & Replace -->
+    <div class="find-bar" id="findBar">
+      <input class="find-input" type="text" id="findInput" placeholder="Find…" oninput="doFind()"/>
+      <input class="find-input" type="text" id="replaceInput" placeholder="Replace with…"/>
+      <button class="find-bar-btn" onclick="doFind()">Find</button>
+      <button class="find-bar-btn" onclick="doReplaceOne()">Replace</button>
+      <button class="find-bar-btn" onclick="doReplaceAll()">All</button>
+      <span class="find-result" id="findResult"></span>
+      <button class="find-bar-btn" onclick="closeFindBar()" style="margin-left:auto">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <!-- Symbol bar -->
+    <div class="symbol-bar" id="symbolBar">
+      <button class="sym-btn" onclick="insertSym('  ')">⇥ Tab</button>
+      <button class="sym-btn" onclick="insertSym('<')">&lt;</button>
+      <button class="sym-btn" onclick="insertSym('>')">&gt;</button>
+      <button class="sym-btn" onclick="insertSym('/')">/</button>
+      <button class="sym-btn" onclick="insertSym('&quot;')">"</button>
+      <button class="sym-btn" onclick="insertSym(&quot;'&quot;)">'</button>
+      <button class="sym-btn" onclick="insertSym('=')">=</button>
+      <button class="sym-btn" onclick="insertSym('{')">&#123;</button>
+      <button class="sym-btn" onclick="insertSym('}')">&#125;</button>
+      <button class="sym-btn" onclick="insertSym('(')">(</button>
+      <button class="sym-btn" onclick="insertSym(')')">)</button>
+      <button class="sym-btn" onclick="insertSym('[')">&#91;</button>
+      <button class="sym-btn" onclick="insertSym(']')">&#93;</button>
+      <button class="sym-btn" onclick="insertSym(';')">;</button>
+      <button class="sym-btn" onclick="insertSym(':')">:</button>
+      <button class="sym-btn" onclick="insertSym('!')">!</button>
+      <button class="sym-btn" onclick="insertSnippet('div')">&lt;div&gt;</button>
+      <button class="sym-btn" onclick="insertSnippet('span')">&lt;span&gt;</button>
+      <button class="sym-btn" onclick="insertSnippet('a')">&lt;a&gt;</button>
+      <button class="sym-btn" onclick="insertSnippet('img')">&lt;img&gt;</button>
+      <button class="sym-btn" onclick="insertSnippet('input')">&lt;input&gt;</button>
+      <button class="sym-btn" onclick="insertSnippet('fn')">fn(){}</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- Status bar -->
+<div class="status-bar">
+  <span id="statusLine">Ln 1, Col 1</span>
+  <span id="statusLang">HTML</span>
+  <span>UTF-8</span>
+  <span id="statusWordWrap">Wrap: ON</span>
+  <span id="statusSize">0 chars</span>
+</div>
+
+<!-- ── New File Modal ── -->
+<div class="dark-modal-overlay" id="newFileModal">
+  <div class="dark-modal">
+    <h3>New File</h3>
+    <div class="file-type-grid">
+      <div class="file-type-opt selected" id="ftype_html" onclick="selectFileType('html')">
+        <div class="ft-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        </div>
+        <div class="ft-name">HTML</div>
+      </div>
+      <div class="file-type-opt" id="ftype_css" onclick="selectFileType('css')">
+        <div class="ft-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>
+        </div>
+        <div class="ft-name">CSS</div>
+      </div>
+      <div class="file-type-opt" id="ftype_js" onclick="selectFileType('js')">
+        <div class="ft-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        </div>
+        <div class="ft-name">JavaScript</div>
+      </div>
+    </div>
+    <input type="text" class="dark-input" id="newFileName" placeholder="filename (without extension)"/>
+    <div class="dark-modal-btns">
+      <button class="dark-btn cancel" onclick="closeOverlay('newFileModal')">Cancel</button>
+      <button class="dark-btn confirm" onclick="createNewFile()">Create</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── New Folder Modal ── -->
+<div class="dark-modal-overlay" id="newFolderModal">
+  <div class="dark-modal">
+    <h3>New Folder</h3>
+    <input type="text" class="dark-input" id="newFolderName" placeholder="folder-name"/>
+    <div class="dark-modal-btns">
+      <button class="dark-btn cancel" onclick="closeOverlay('newFolderModal')">Cancel</button>
+      <button class="dark-btn confirm" onclick="createNewFolder()">Create</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Rename Modal ── -->
+<div class="dark-modal-overlay" id="renameModal">
+  <div class="dark-modal">
+    <h3 id="renameModalTitle">Rename</h3>
+    <input type="text" class="dark-input" id="renameInput" placeholder="new name"/>
+    <div class="dark-modal-btns">
+      <button class="dark-btn cancel" onclick="closeOverlay('renameModal')">Cancel</button>
+      <button class="dark-btn confirm" onclick="doRename()">Rename</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Jump to Line Modal ── -->
+<div class="dark-modal-overlay" id="jumpModal">
+  <div class="dark-modal">
+    <h3>Jump to Line</h3>
+    <input type="number" class="dark-input" id="jumpLineInput" placeholder="Line number…" min="1"/>
+    <div class="dark-modal-btns">
+      <button class="dark-btn cancel" onclick="closeOverlay('jumpModal')">Cancel</button>
+      <button class="dark-btn confirm" onclick="doJumpToLine()">Go</button>
+    </div>
+  </div>
+</div>
+
+<!-- Custom Confirm Modal -->
+<div class="dark-modal-overlay" id="confirmModal">
+  <div class="dark-modal" style="max-width:300px;text-align:center;padding:28px 24px;">
+    <div id="confirmIcon" style="font-size:2.4rem;margin-bottom:12px;line-height:1;"></div>
+    <h3 id="confirmTitle" style="margin-bottom:6px;font-size:1rem;color:#fff;"></h3>
+    <p id="confirmMsg" style="color:#999;font-size:.83rem;margin-bottom:22px;line-height:1.5;word-break:break-all;"></p>
+    <div class="dark-modal-btns" style="justify-content:center;gap:10px;">
+      <button class="dark-btn cancel" id="confirmCancelBtn" style="min-width:80px;">Cancel</button>
+      <button class="dark-btn danger" id="confirmOkBtn" style="min-width:80px;">OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Google Drive Modal ── -->
+<div class="dark-modal-overlay" id="driveModal">
+  <div class="dark-modal" style="max-width:380px">
+    <h3 style="display:flex;align-items:center;gap:8px">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
+      Google Drive Backup
+    </h3>
+    <p style="font-size:.8rem;color:#888;margin-bottom:16px;line-height:1.5">
+      Project টি Google Drive এ JSON ফাইল হিসেবে সেভ হবে। পরে লোড করতে সেই ফাইলটি এখানে আপলোড করুন।
+    </p>
+
+    <!-- Save to Drive -->
+    <div style="background:#1a1a2e;border:1px solid #3c3c3c;border-radius:8px;padding:14px;margin-bottom:10px">
+      <div style="font-size:.78rem;font-weight:700;color:#60a5fa;margin-bottom:10px">
+        ☁️ Drive এ সেভ করুন
+      </div>
+      <div id="driveStatus" style="font-size:.75rem;color:#f59e0b;margin-bottom:10px" id="driveStatusText">লোড হচ্ছে…</div>
+      <button class="dark-btn confirm" onclick="signInAndSaveDrive()" id="driveSignInBtn" style="width:100%;margin-bottom:6px;display:flex;align-items:center;justify-content:center;gap:6px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+        Google এ সাইন ইন করুন
+      </button>
+      <button class="dark-btn" onclick="saveToDrive()" id="driveSaveBtn" style="width:100%;background:#10b981;color:#fff;display:none;align-items:center;justify-content:center;gap:6px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
+        Drive এ সেভ করুন
+      </button>
+    </div>
+
+    <!-- Load from file -->
+    <div style="background:#1a1a2e;border:1px solid #3c3c3c;border-radius:8px;padding:14px;margin-bottom:16px">
+      <div style="font-size:.78rem;font-weight:700;color:#f59e0b;margin-bottom:10px">
+        📂 Backup ফাইল থেকে লোড করুন
+      </div>
+      <p style="font-size:.73rem;color:#888;margin-bottom:10px">
+        আগে সেভ করা .json ফাইলটি বেছে নিন:
+      </p>
+      <input type="file" id="driveFileInput" accept=".json" style="display:none" onchange="loadFromFile(this)"/>
+      <button class="dark-btn" onclick="document.getElementById('driveFileInput').click()" style="width:100%;background:#f59e0b;color:#000;font-weight:700;display:flex;align-items:center;justify-content:center;gap:6px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+        ফাইল আপলোড করুন
+      </button>
+    </div>
+
+    <div style="display:flex;gap:8px">
+      <button class="dark-btn cancel" onclick="closeOverlay('driveModal')" style="flex:1">বন্ধ করুন</button>
+      <button class="dark-btn" onclick="downloadBackup()" style="flex:1;background:#6366f1;color:#fff;display:flex;align-items:center;justify-content:center;gap:5px">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        .json ডাউনলোড
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/core.js"></script>
+<script>
+if (!requireAuth()) {}
+
+let currentProject = null, currentFile = 'index.html';
+let openTabs = [], unsavedFiles = new Set();
+let editorInstance = null, wordWrap = true, fontSize = 14;
+let newFileType = 'html', previewOpen = false;
+let autoSaveTimer = null, previewTimer = null;
+
+const DEFAULT_FILES = {
+  'index.html': [
+    '<!DOCTYPE html>',
+    '<html lang="en">',
+    '<head>',
+    '  <meta charset="UTF-8"/>',
+    '  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>',
+    '  <title>My App</' + 'title>',
+    '  <link rel="stylesheet" href="style.css"/>',
+    '</' + 'head>',
+    '<body>',
+    '  <h1>Hello World!</h1>',
+    '  <p>Edit this file to get started.</p>',
+    '  <script src="script.js"><\/script>',
+    '</' + 'body>',
+    '</' + 'html>'
+  ].join('\n'),
+  'style.css': [
+    '* {',
+    '  box-sizing: border-box;',
+    '  margin: 0; padding: 0;',
+    '}',
+    'body {',
+    '  font-family: sans-serif;',
+    '  background: #f8fafc;',
+    '  color: #0f172a;',
+    '  padding: 20px;',
+    '}',
+    'h1 {',
+    '  font-size: 2rem;',
+    '  color: #2563eb;',
+    '  margin-bottom: 10px;',
+    '}'
+  ].join('\n'),
+  'script.js': "// Your JavaScript\nconsole.log('Hello from Wevlo!');"
+};
+
+/* ── File icon SVGs ── */
+function fileIcon(name) {
+  if (name.endsWith('.html')) return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#e06c75" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>`;
+  if (name.endsWith('.css'))  return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#61afef" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6m-6 4h6m-6 4h4"/></svg>`;
+  if (name.endsWith('.js'))   return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#e5c07b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`;
+  if (name.endsWith('.kt') || name.endsWith('.kts')) return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7c52ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><text x="7" y="19" font-size="7" fill="#7c52ff" stroke="none">KT</text></svg>`;
+  if (name.endsWith('.java')) return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f89820" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`;
+  if (name.endsWith('.gradle')) return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#02303a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`;
+  if (/\.(png|jpg|jpeg|webp|gif|ico)$/i.test(name)) return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#56b6c2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`;
+  if (name.endsWith('.xml'))  return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#98c379" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`;
+  return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`;
+}
+
+function getMode(name) {
+  if (name.endsWith('.css'))         return 'css';
+  if (name.endsWith('.js'))          return 'javascript';
+  if (name.endsWith('.json'))        return { name: 'javascript', json: true };
+  if (name.endsWith('.kt'))          return 'text/x-kotlin';
+  if (name.endsWith('.java'))        return 'text/x-java';
+  if (name.endsWith('.xml'))         return 'xml';
+  if (/\.(png|jpg|jpeg|webp|gif|ico)$/i.test(name)) return 'null';
+  if (name.endsWith('.gradle'))      return 'groovy';
+  if (name.endsWith('.md'))          return 'markdown';
+  if (name.endsWith('.ts'))          return 'javascript';
+  return 'htmlmixed';
+}
+
+function getLangLabel(name) {
+  if (name.endsWith('.css'))    return 'CSS';
+  if (name.endsWith('.js'))     return 'JavaScript';
+  if (name.endsWith('.ts'))     return 'TypeScript';
+  if (name.endsWith('.json'))   return 'JSON';
+  if (name.endsWith('.kt'))     return 'Kotlin';
+  if (name.endsWith('.java'))   return 'Java';
+  if (name.endsWith('.xml'))    return 'XML';
+  if (name.endsWith('.gradle')) return 'Gradle';
+  if (name.endsWith('.md'))     return 'Markdown';
+  if (name.endsWith('.html'))   return 'HTML';
+  return 'Text';
+}
+
+function buildStarterFiles(name) {
+  const folder = name.replace(/[/\\:*?"<>|]/g, '_');
+  const files = {};
+  files[folder + '/index.html'] = [
+    '<!DOCTYPE html>',
+    '<html lang="en">',
+    '<head>',
+    '  <meta charset="UTF-8"/>',
+    '  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>',
+    '  <title>' + name + '</' + 'title>',
+    '  <link rel="stylesheet" href="style.css"/>',
+    '</' + 'head>',
+    '<body>',
+    '  <h1>' + name + '</' + 'h1>',
+    '  <p>Edit this file to get started.</p>',
+    '  <script src="script.js"><\/script>',
+    '</' + 'body>',
+    '</' + 'html>'
+  ].join('\n');
+  files[folder + '/style.css'] = [
+    '* {',
+    '  box-sizing: border-box;',
+    '  margin: 0; padding: 0;',
+    '}',
+    'body {',
+    '  font-family: sans-serif;',
+    '  background: #f8fafc;',
+    '  color: #0f172a;',
+    '  padding: 20px;',
+    '}',
+    'h1 {',
+    '  font-size: 2rem;',
+    '  color: #2563eb;',
+    '  margin-bottom: 10px;',
+    '}'
+  ].join('\n');
+  files[folder + '/script.js'] = "// JavaScript\nconsole.log('Hello from " + name + "!');";
+  return files;
+}
+
+async function init() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const projectId = urlParams.get('p');
+
+  // projects.html থেকে #d= hash এ encoded project data পাঠানো হলে আগে save করো
+  try {
+    const hash = window.location.hash;
+    if (hash && hash.startsWith('#d=')) {
+      const encoded = hash.slice(3);
+      const decoded = JSON.parse(decodeURIComponent(escape(atob(encoded))));
+      if (decoded && decoded.id) {
+        const existing = await WevloDB.getProjects();
+        const idx = existing.findIndex(p => p.id === decoded.id);
+        if (idx >= 0) existing[idx] = decoded; else existing.unshift(decoded);
+        await WevloDB.setProjects(existing);
+        // hash সরিয়ে দাও যাতে reload এ duplicate না হয়
+        history.replaceState(null, '', window.location.pathname + window.location.search);
+      }
+    }
+  } catch(e) {}
+
+  const projects  = await WevloDB.getProjects();
+  currentProject  = projects.find(p => p.id === projectId) || projects[0] || null;
+
+  // project না থাকলে বা files ফাঁকা/null হলে starter দাও
+  if (!currentProject) {
+    currentProject = { id: 'p_temp', name: 'Untitled', type: 'html', files: {}, createdAt: Date.now(), updatedAt: Date.now() };
+  }
+
+  // files ফাঁকা বা সব content empty হলে starter files দাও
+  // template type হলে overwrite করবো না
+  const hasFiles = currentProject.files && Object.keys(currentProject.files).length > 0;
+  const hasContent = hasFiles && Object.values(currentProject.files).some(v => v && v.trim().length > 0);
+  const isTemplate = currentProject.type === 'template';
+
+  if (!hasFiles || (!hasContent && !isTemplate && currentProject.type !== 'native')) {
+    // native (Android) project এ buildStarterFiles দিয়ে overwrite করা যাবে না
+    currentProject.files = buildStarterFiles(currentProject.name || 'My App');
+    // IndexedDB তে সাথে সাথে update করো যাতে পরে লোডে ঠিক থাকে
+    const allProjects = await WevloDB.getProjects();
+    const idx = allProjects.findIndex(p => p.id === currentProject.id);
+    if (idx >= 0) allProjects[idx] = currentProject; else allProjects.unshift(currentProject);
+    await WevloDB.setProjects(allProjects);
+  }
+
+  document.getElementById('projectNameBadge').textContent = currentProject.name || 'Untitled';
+
+  editorInstance = CodeMirror.fromTextArea(document.getElementById('codeEditor'), {
+    theme: 'dracula', lineNumbers: true,
+    inputStyle: 'textarea',
+    autoCloseTags: true, autoCloseBrackets: true,
+    matchBrackets: true, foldGutter: true,
+    gutters: ['CodeMirror-linenumbers','CodeMirror-foldgutter'],
+    indentUnit: 2, tabSize: 2, indentWithTabs: false,
+    lineWrapping: true,
+    extraKeys: {
+      'Ctrl-S':     () => saveAll(),
+      'Ctrl-Z':     () => editorInstance.undo(),
+      'Ctrl-Y':     () => editorInstance.redo(),
+      'Ctrl-/':     () => toggleComment(),
+      'Ctrl-H':     () => toggleFindBar(),
+      'Ctrl-Space': 'autocomplete',
+      'Tab': cm => {
+        if (cm.somethingSelected()) cm.indentSelection('add');
+        else cm.replaceSelection('  ');
+      }
+    }
+  });
+
+  // Mobile: OS Select All → Delete fix
+  (function() {
+    const wrapper = editorInstance.getWrapperElement();
+    const _ta = wrapper.querySelector('textarea');
+    if (!_ta) return;
+
+    let _prevValue = '';
+    let _cmSelectAllPending = false;
+
+    // CodeMirror focus হলে textarea value sync রাখো
+    editorInstance.on('focus', () => { _prevValue = editorInstance.getValue(); });
+    editorInstance.on('change', () => { _prevValue = editorInstance.getValue(); });
+
+    // selectionchange: OS "Select All" detect
+    document.addEventListener('selectionchange', function() {
+      try {
+        const sel = window.getSelection();
+        if (!sel || sel.isCollapsed) return;
+        if (!wrapper.contains(document.activeElement)) return;
+        const selected = sel.toString();
+        const total = editorInstance.getValue();
+        // selected text যদি total content এর সাথে match করে
+        if (selected.length > 0 && selected.replace(/\r\n/g,'\n') === total) {
+          _cmSelectAllPending = true;
+          const lastLine = editorInstance.lineCount() - 1;
+          editorInstance.setSelection(
+            { line: 0, ch: 0 },
+            { line: lastLine, ch: editorInstance.getLine(lastLine).length }
+          );
+        }
+      } catch(e) {}
+    });
+
+    // input event: textarea empty হয়ে গেলে CM কে clear করো
+    _ta.addEventListener('input', function(e) {
+      if (_ta.value === '' && _prevValue.trim().length > 0) {
+        // OS delete সব নিয়ে গেছে — CM sync করো
+        editorInstance.setValue('');
+        editorInstance.clearHistory();
+        _cmSelectAllPending = false;
+        _prevValue = '';
+        editorInstance.focus();
+      }
+    });
+
+    // beforeinput fallback
+    _ta.addEventListener('beforeinput', function(e) {
+      const delTypes = ['deleteContentBackward','deleteContentForward','deleteByCut','deleteContent','deleteByDrag'];
+      if (!delTypes.includes(e.inputType)) return;
+      if (_cmSelectAllPending || editorInstance.somethingSelected()) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        const lastLine = editorInstance.lineCount() - 1;
+        editorInstance.replaceRange('',
+          { line: 0, ch: 0 },
+          { line: lastLine, ch: editorInstance.getLine(lastLine).length }
+        );
+        _cmSelectAllPending = false;
+        _prevValue = '';
+        editorInstance.focus();
+      }
+    }, true);
+  })();
+
+  editorInstance.on('change', () => {
+    markUnsaved(currentFile);
+    updateStatus();
+    scheduleAutoSave();
+    if (previewOpen) schedulePreviewRefresh();
+  });
+  editorInstance.on('cursorActivity', updateStatus);
+
+  const allFileKeys = Object.keys(currentProject.files);
+  let firstFile;
+  if (currentProject.type === 'native') {
+    // native project এ MainActivity.kt অথবা AndroidManifest.xml দিয়ে শুরু করো
+    firstFile = allFileKeys.find(f => f.endsWith('MainActivity.kt'))
+             || allFileKeys.find(f => f.endsWith('AndroidManifest.xml'))
+             || allFileKeys[0]
+             || 'MainActivity.kt';
+  } else {
+    firstFile = allFileKeys[0] || 'index.html';
+  }
+  // _initDone = true করার আগে openFile call করো না
+  // CodeMirror init শেষ হওয়ার পর setValue করো
+  currentFile = firstFile;
+  if (!openTabs.includes(firstFile)) openTabs.push(firstFile);
+  const initContent = currentProject.files[firstFile] || '';
+  // একটু delay দিয়ে set করো — CodeMirror mobile-এ ঠিকমতো render হতে সময় লাগে
+  editorInstance.setValue(initContent);
+  editorInstance.setOption('mode', getMode(firstFile));
+  editorInstance.clearHistory();
+  setTimeout(() => {
+    editorInstance.setValue(initContent);
+    editorInstance.refresh();
+    editorInstance.focus();
+    updateStatus();
+  }, 200);
+  setTimeout(() => editorInstance.refresh(), 500);
+  renderFileList();
+  renderTabs();
+}
+
+// Folder collapse state
+const collapsedFolders = new Set();
+
+function toggleFolder(name) {
+  if (collapsedFolders.has(name)) {
+    collapsedFolders.delete(name);
+  } else {
+    collapsedFolders.add(name);
+  }
+  renderFileList();
+}
+
+function renderFileList() {
+  const allFiles = Object.keys(currentProject.files || {});
+  const fileList = document.getElementById('fileList');
+
+  function renderTree(files, prefix, depth) {
+    const directFiles = [];
+    const subFolders = {};
+
+    files.forEach(f => {
+      if (f === '.wevlo_folder') return; // marker লুকাও
+      const slashIdx = f.indexOf('/');
+      if (slashIdx === -1) {
+        directFiles.push(f);
+      } else {
+        const folder = f.slice(0, slashIdx);
+        const rest   = f.slice(slashIdx + 1);
+        if (!subFolders[folder]) subFolders[folder] = [];
+        subFolders[folder].push(rest);
+      }
+    });
+
+    const folderIndent = depth * 14;
+    const fileIndent   = depth * 14 + 10;
+    let html = '';
+
+    Object.keys(subFolders).sort().forEach(folder => {
+      const fullPath = prefix ? prefix + '/' + folder : folder;
+      const safeId   = 'fc_' + fullPath.replace(/[^a-zA-Z0-9]/g, '_');
+      const isOpen   = !collapsedFolders.has(fullPath);
+      const children = renderTree(subFolders[folder], fullPath, depth + 1);
+
+      html += '<div class="folder-row" style="padding-left:' + (12 + folderIndent) + 'px" onclick="toggleFolder(\'' + fullPath + '\')" oncontextmenu="showFolderCtx(event,\'' + fullPath + '\')">';
+      html += '<span class="folder-chevron ' + (isOpen ? 'open' : '') + '">';
+      html += '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>';
+      html += '</span>';
+      html += '<span class="folder-icon">';
+      html += '<svg width="15" height="15" viewBox="0 0 24 24" fill="' + (isOpen ? '#e8b84b' : '#888') + '" stroke="none"><path d="M10 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8l-2-2z"/></svg>';
+      html += '</span>';
+      html += '<span style="flex:1">' + folder + '</span>';
+      html += '<button class="file-sidebar-add" style="opacity:0.5;padding:1px 4px" onclick="event.stopPropagation();openNewFileInFolder(\'' + fullPath + '\')" title="New file">';
+      html += '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
+      html += '</button>';
+      html += '</div>';
+      html += '<div class="folder-children ' + (isOpen ? '' : 'collapsed') + '" id="' + safeId + '">' + children + '</div>';
+    });
+
+    directFiles.sort().forEach(fname => {
+      const fullPath = prefix ? prefix + '/' + fname : fname;
+      html += '<div class="file-item ' + (fullPath === currentFile ? 'active' : '') + '" style="padding-left:' + (12 + fileIndent) + 'px" onclick="openFile(\'' + fullPath + '\')" oncontextmenu="showFileCtx(event,\'' + fullPath + '\')">';
+      html += '<span class="file-icon">' + fileIcon(fname) + '</span>';
+      html += '<span class="file-name">' + fname + '</span>';
+      if (unsavedFiles.has(fullPath)) html += '<span class="unsaved-dot"></span>';
+      if (allFiles.length > 1) html += '<button class="file-del" onclick="event.stopPropagation();deleteFile(\'' + fullPath + '\')" title="Delete"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>';
+      html += '</div>';
+    });
+
+    return html;
+  }
+
+  fileList.innerHTML = renderTree(allFiles, '', 0);
+}
+
+function openFile(filename) {
+  // প্রথমবার call-এ (currentFile === filename) overwrite করবো না
+  // শুধু অন্য file-এ switch করলে আগেরটা সেভ করো
+  if (editorInstance && currentProject.files && currentFile && currentFile !== filename) {
+    const curVal = editorInstance.getValue();
+    // ফাঁকা দিয়ে overwrite করা যাবে না — শুধু content থাকলে সেভ করো
+    if (curVal.trim().length > 0) {
+      currentProject.files[currentFile] = curVal;
+    }
+  }
+  currentFile = filename;
+  const fileContent = currentProject.files[filename] ?? '';
+
+  // Image file হলে preview দেখাও, editor এ base64 দেখাবো না
+  const isImage = /\.(png|jpg|jpeg|webp|gif|ico)$/i.test(filename);
+  let imgPreviewEl = document.getElementById('wbImgPreview');
+  if (isImage && fileContent.startsWith('data:')) {
+    editorInstance.setValue('// Image file — preview below');
+    if (!imgPreviewEl) {
+      imgPreviewEl = document.createElement('div');
+      imgPreviewEl.id = 'wbImgPreview';
+      imgPreviewEl.style.cssText = 'position:absolute;bottom:40px;right:10px;background:#1e1e2e;border:1px solid #444;border-radius:8px;padding:8px;z-index:50;text-align:center;';
+      document.querySelector('.editor-area') && document.querySelector('.editor-area').appendChild(imgPreviewEl);
+    }
+    const fname = filename.split('/').pop();
+    imgPreviewEl.innerHTML = `<div style="font-size:11px;color:#888;margin-bottom:4px;">${fname}</div><img src="${fileContent}" style="max-width:160px;max-height:160px;border-radius:4px;display:block;">`;
+    imgPreviewEl.style.display = 'block';
+  } else {
+    if (imgPreviewEl) imgPreviewEl.style.display = 'none';
+    editorInstance.setValue(fileContent);
+  }
+  // Mobile এ file select করলে sidebar বন্ধ করো
+  if (window.innerWidth <= 700) closeSidebarMobile();
+  editorInstance.setOption('mode', getMode(filename));
+  editorInstance.clearHistory();
+  if (!openTabs.includes(filename)) openTabs.push(filename);
+  renderTabs(); renderFileList();
+  document.getElementById('statusLang').textContent = getLangLabel(filename);
+  updateStatus();
+  // CodeMirror mobile refresh fix — multiple attempts
+  editorInstance.refresh();
+  setTimeout(() => { editorInstance.refresh(); }, 100);
+  setTimeout(() => { editorInstance.refresh(); editorInstance.focus(); }, 300);
+}
+
+function renderTabs() {
+  document.getElementById('tabsBar').innerHTML = openTabs.map(f => {
+    const label = f.includes('/') ? f.slice(f.lastIndexOf('/') + 1) : f;
+    return `<div class="editor-tab ${f===currentFile?'active':''}" onclick="openFile('${f}')">
+      ${fileIcon(label)} ${label}
+      ${unsavedFiles.has(f) ? '<span class="tab-dot"></span>' : ''}
+      <button class="tab-close" onclick="event.stopPropagation();closeTab('${f}')">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>`;
+  }).join('');
+}
+
+function _doCloseTab(f) {
+  openTabs = openTabs.filter(t => t !== f);
+  unsavedFiles.delete(f);
+  if (currentFile === f) {
+    const next = openTabs[0] || Object.keys(currentProject.files)[0];
+    if (next) openFile(next);
+  } else renderTabs();
+}
+function closeTab(f) {
+  if (unsavedFiles.has(f)) {
+    showConfirm({ icon:'⚠️', title:'Unsaved Changes', message:'"' + f + '" has unsaved changes. Close anyway?', okLabel:'Close', okClass:'danger', onOk:() => _doCloseTab(f) });
+    return;
+  }
+  _doCloseTab(f);
+}
+function markUnsaved(f) {
+  unsavedFiles.add(f);
+  document.getElementById('saveIndicator').style.display = 'inline-flex';
+  renderTabs(); renderFileList();
+}
+
+// ── New Folder ──
+function openNewFolderModal() {
+  document.getElementById('newFolderName').value = '';
+  document.getElementById('newFolderModal').classList.add('open');
+  setTimeout(() => document.getElementById('newFolderName').focus(), 100);
+}
+function createNewFolder() {
+  const name = document.getElementById('newFolderName').value.trim().replace(/[\/\\:*?"<>|]/g, '_');
+  if (!name) return;
+  const fullName = _targetParentFolder ? _targetParentFolder + '/' + name : name;
+  // hidden marker দিয়ে ফোল্ডার exist করাবো, কোনো file খুলবো না
+  const marker = fullName + '/.wevlo_folder';
+  if (currentProject.files[marker] !== undefined) {
+    showToast('Folder already exists', 'warning'); return;
+  }
+  currentProject.files[marker] = '';
+  _targetParentFolder = '';
+  closeOverlay('newFolderModal');
+  saveProjectSync(); renderFileList();
+  showToast('Folder created: ' + fullName, 'success');
+}
+
+// ── New File in specific folder ──
+let _targetFolder = '';
+function openNewFileInFolder(folder) {
+  _targetFolder = folder;
+  document.getElementById('newFileName').value = '';
+  selectFileType('html');
+  document.getElementById('newFileModal').classList.add('open');
+  setTimeout(() => document.getElementById('newFileName').focus(), 100);
+}
+
+// ── New Folder inside existing folder ──
+let _targetParentFolder = '';
+function openNewFolderInsideFolder(parentFolder) {
+  _targetParentFolder = parentFolder;
+  document.getElementById('newFolderName').value = '';
+  document.getElementById('newFolderModal').classList.add('open');
+  setTimeout(() => document.getElementById('newFolderName').focus(), 100);
+}
+
+// ── Rename ──
+let _renameTarget = null, _renameType = '';
+function openRenameModal(type, target) {
+  _renameType = type; _renameTarget = target;
+  document.getElementById('renameModalTitle').textContent = type === 'folder' ? 'Rename Folder' : 'Rename File';
+  const current = type === 'folder' ? target : target.slice(target.lastIndexOf('/') + 1);
+  document.getElementById('renameInput').value = current;
+  closeCtxMenu();
+  document.getElementById('renameModal').classList.add('open');
+  setTimeout(() => { const el = document.getElementById('renameInput'); el.focus(); el.select(); }, 100);
+}
+function doRename() {
+  const newName = document.getElementById('renameInput').value.trim().replace(/[\/\\:*?"<>|]/g, '_');
+  if (!newName) return;
+
+  if (_renameType === 'folder') {
+    const oldFolder = _renameTarget;
+    const files = Object.keys(currentProject.files);
+    const toRename = files.filter(f => f.startsWith(oldFolder + '/'));
+    if (toRename.length === 0) { closeOverlay('renameModal'); return; }
+    toRename.forEach(f => {
+      const newKey = newName + f.slice(oldFolder.length);
+      currentProject.files[newKey] = currentProject.files[f];
+      delete currentProject.files[f];
+      if (openTabs.includes(f)) { openTabs[openTabs.indexOf(f)] = newKey; }
+      if (currentFile === f) currentFile = newKey;
+    });
+  } else {
+    // File rename
+    const oldKey = _renameTarget;
+    const dir = oldKey.includes('/') ? oldKey.slice(0, oldKey.lastIndexOf('/') + 1) : '';
+    const ext = oldKey.includes('.') ? '.' + oldKey.split('.').pop() : '';
+    const newNameWithExt = newName.includes('.') ? newName : newName + ext;
+    const newKey = dir + newNameWithExt;
+    if (newKey === oldKey) { closeOverlay('renameModal'); return; }
+    if (currentProject.files[newKey] !== undefined) { showToast('Already exists', 'warning'); return; }
+    currentProject.files[newKey] = currentProject.files[oldKey];
+    delete currentProject.files[oldKey];
+    if (openTabs.includes(oldKey)) { openTabs[openTabs.indexOf(oldKey)] = newKey; }
+    if (currentFile === oldKey) currentFile = newKey;
+  }
+  closeOverlay('renameModal');
+  saveProjectSync(); renderFileList(); renderTabs();
+  showToast('Renamed ✓', 'success');
+}
+
+// ── Delete Folder ──
+function _doDeleteFolder(folder, files) {
+  files.forEach(f => {
+    delete currentProject.files[f];
+    openTabs = openTabs.filter(t => t !== f);
+    unsavedFiles.delete(f);
+  });
+  if (files.includes(currentFile)) {
+    const first = Object.keys(currentProject.files)[0];
+    if (first) openFile(first);
+  }
+  saveProjectSync(); renderFileList(); renderTabs();
+  showToast('Folder deleted', 'success');
+}
+function deleteFolder(folder) {
+  closeCtxMenu();
+  const files = Object.keys(currentProject.files).filter(f => f.startsWith(folder + '/'));
+  showConfirm({ icon:'🗑️', title:'Delete Folder', message:'Delete "' + folder + '" and ' + files.length + ' file(s)?', okLabel:'Delete', okClass:'danger', onOk:() => _doDeleteFolder(folder, files) });
+}
+
+// ── Custom Confirm Modal ──
+function showConfirm({ icon = '⚠️', title = 'Confirm', message = '', okLabel = 'OK', okClass = 'danger', onOk }) {
+  document.getElementById('confirmIcon').textContent = icon;
+  document.getElementById('confirmTitle').textContent = title;
+  document.getElementById('confirmMsg').textContent = message;
+  const okBtn = document.getElementById('confirmOkBtn');
+  okBtn.textContent = okLabel;
+  okBtn.className = 'dark-btn confirm ' + okClass;
+  okBtn.onclick = () => { closeOverlay('confirmModal'); onOk && onOk(); };
+  document.getElementById('confirmCancelBtn').onclick = () => closeOverlay('confirmModal');
+  document.getElementById('confirmModal').classList.add('open');
+}
+
+
+let _ctxMenu = null;
+function closeCtxMenu() {
+  if (_ctxMenu) { _ctxMenu.remove(); _ctxMenu = null; }
+}
+function showFileCtx(e, filepath) {
+  e.preventDefault(); e.stopPropagation();
+  closeCtxMenu();
+  const fname = filepath.includes('/') ? filepath.slice(filepath.lastIndexOf('/') + 1) : filepath;
+  const menu = document.createElement('div');
+  menu.className = 'ctx-menu';
+  menu.innerHTML = `
+    <button class="ctx-item" onclick="openFile('${filepath}');closeCtxMenu()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Open
+    </button>
+    <button class="ctx-item" onclick="openRenameModal('file','${filepath}')">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Rename
+    </button>
+    <div class="ctx-divider"></div>
+    <button class="ctx-item danger" onclick="closeCtxMenu();deleteFile('${filepath}')">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg> Delete
+    </button>`;
+  _positionCtxMenu(menu, e);
+}
+function showFolderCtx(e, folder) {
+  e.preventDefault(); e.stopPropagation();
+  closeCtxMenu();
+  const menu = document.createElement('div');
+  menu.className = 'ctx-menu';
+  menu.innerHTML = `
+    <button class="ctx-item" onclick="openNewFileInFolder('${folder}');closeCtxMenu()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> New File Inside
+    </button>
+    <button class="ctx-item" onclick="openNewFolderInsideFolder('${folder}');closeCtxMenu()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg> New Folder Inside
+    </button>
+    <button class="ctx-item" onclick="openRenameModal('folder','${folder}')">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Rename Folder
+    </button>
+    <div class="ctx-divider"></div>
+    <button class="ctx-item danger" onclick="deleteFolder('${folder}')">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg> Delete Folder
+    </button>`;
+  _positionCtxMenu(menu, e);
+}
+function _positionCtxMenu(menu, e) {
+  document.body.appendChild(menu);
+  _ctxMenu = menu;
+  const x = Math.min(e.clientX, window.innerWidth - 170);
+  const y = Math.min(e.clientY, window.innerHeight - menu.offsetHeight - 10);
+  menu.style.left = x + 'px';
+  menu.style.top  = y + 'px';
+  setTimeout(() => document.addEventListener('click', closeCtxMenu, { once: true }), 0);
+}
+
+function openNewFileModal() {
+  document.getElementById('newFileName').value = '';
+  selectFileType('html');
+  document.getElementById('newFileModal').classList.add('open');
+  setTimeout(() => document.getElementById('newFileName').focus(), 100);
+}
+function selectFileType(type) {
+  newFileType = type;
+  document.querySelectorAll('.file-type-opt').forEach(o => o.classList.remove('selected'));
+  document.getElementById('ftype_' + type)?.classList.add('selected');
+}
+function createNewFile() {
+  const name = document.getElementById('newFileName').value.trim();
+  if (!name) return;
+  const rawFilename = name.includes('.') ? name : name + '.' + newFileType;
+
+  // _targetFolder set থাকলে সেটা use করো, নইলে existing files থেকে detect করো
+  let folder = _targetFolder || '';
+  if (!folder) {
+    const existingFiles = Object.keys(currentProject.files || {});
+    const firstWithSlash = existingFiles.find(f => f.includes('/'));
+    if (firstWithSlash) folder = firstWithSlash.slice(0, firstWithSlash.indexOf('/'));
+  }
+  _targetFolder = ''; // reset
+
+  const filename = (folder && !rawFilename.includes('/')) ? folder + '/' + rawFilename : rawFilename;
+
+  if (currentProject.files[filename] !== undefined) { showToast('File already exists','warning'); return; }
+  const starters = { html:'<!DOCTYPE html>\n<html>\n<head>\n  <title>New Page</title>\n</head>\n<body>\n  \n</body>\n</html>', css:'/* Styles */\n', js:'// JavaScript\n' };
+  currentProject.files[filename] = starters[newFileType] || '';
+  closeOverlay('newFileModal'); saveProjectSync(); renderFileList(); openFile(filename);
+  showToast('File created: ' + rawFilename, 'success');
+}
+function _doDeleteFile(f) {
+  delete currentProject.files[f];
+  openTabs = openTabs.filter(t => t !== f);
+  unsavedFiles.delete(f); saveProjectSync(); renderFileList(); renderTabs();
+  if (currentFile === f) {
+    const first = Object.keys(currentProject.files)[0];
+    if (first) openFile(first);
+  }
+  showToast('File deleted', 'success');
+}
+function deleteFile(f) {
+  showConfirm({ icon:'🗑️', title:'Delete File', message:'Delete "' + f + '"?', okLabel:'Delete', okClass:'danger', onOk:() => _doDeleteFile(f) });
+}
+function saveAll() {
+  const val = editorInstance.getValue();
+  // ফাঁকা হলে সেভ করবো না — বরং files এ যা আছে সেটাই রাখো
+  if (val.trim().length > 0) {
+    currentProject.files[currentFile] = val;
+  }
+  currentProject.updatedAt = Date.now();
+  saveProjectSync(); // IndexedDB তে সেভ
+  unsavedFiles.clear();
+  document.getElementById('saveIndicator').style.display = 'none';
+  renderTabs(); renderFileList();
+  // Drive connected থাকলে auto-backup, না থাকলে শুধু localStorage
+  checkDriveAuth();
+  if (driveSignedIn) {
+    saveToDrive().then(() => {}).catch(() => {});
+    showToast('✅ Saved + Drive backup হচ্ছে…', 'success');
+  } else {
+    showToast('✅ Saved (IndexedDB)', 'success');
+  }
+}
+async function saveProject() {
+  // সেভ করার আগে editor-এর current content নিশ্চিত করো
+  if (editorInstance && currentFile) {
+    currentProject.files[currentFile] = editorInstance.getValue();
+  }
+  currentProject.updatedAt = Date.now();
+  const projects = await WevloDB.getProjects();
+  const idx = projects.findIndex(p => p.id === currentProject.id);
+  if (idx >= 0) projects[idx] = currentProject; else projects.unshift(currentProject);
+  await WevloDB.setProjects(projects);
+}
+
+// Sync wrapper — যেসব জায়গায় await দেওয়া সম্ভব না সেখানে এটা use করো
+function saveProjectSync() {
+  saveProject().catch(e => console.error('saveProject failed:', e));
+}
+
+function scheduleAutoSave() {
+  clearTimeout(autoSaveTimer);
+  autoSaveTimer = setTimeout(() => {
+    const val = editorInstance.getValue();
+    // ফাঁকা content দিয়ে কখনো auto-save করবো না
+    if (val.trim().length > 0) {
+      currentProject.files[currentFile] = val;
+      saveProjectSync();
+    }
+  }, 2000);
+}
+
+function togglePreview() {
+  previewOpen = !previewOpen;
+  document.getElementById('previewPane').classList.toggle('open', previewOpen);
+  document.getElementById('previewToggleBtn').classList.toggle('primary', previewOpen);
+  if (previewOpen) refreshPreview();
+  setTimeout(() => editorInstance.refresh(), 300);
+}
+function schedulePreviewRefresh() {
+  clearTimeout(previewTimer);
+  previewTimer = setTimeout(refreshPreview, 800);
+}
+
+// সব project ফাইল inline করে HTML তৈরি করো
+function buildPreviewHtml(activeFile) {
+  const files = currentProject.files || {};
+  if (editorInstance && currentFile) files[currentFile] = editorInstance.getValue();
+
+  let htmlFile = null;
+  if (activeFile && activeFile.endsWith('.html') && files[activeFile] !== undefined) {
+    htmlFile = activeFile;
+  } else {
+    htmlFile = Object.keys(files).find(f => f === 'index.html')
+            || Object.keys(files).find(f => f.endsWith('/index.html'))
+            || Object.keys(files).find(f => f.endsWith('.html'));
+  }
+  if (!htmlFile) return null;
+  return { htmlFile, files };
+}
+
+function inlineSingle(htmlFile, files) {
+  let html = files[htmlFile] || '';
+  const baseDir = htmlFile.includes('/') ? htmlFile.substring(0, htmlFile.lastIndexOf('/') + 1) : '';
+  function res(p) {
+    const c = p.replace(/^\.\//, '');
+    if (files[c] !== undefined) return c;
+    if (files[baseDir + c] !== undefined) return baseDir + c;
+    return null;
+  }
+  html = html.replace(/<link[^>]+rel=["']stylesheet["'][^>]*href=["']([^"']+)["'][^>]*\/?>/gi, function(m, h) {
+    const k = res(h); return k !== null ? '<style>' + files[k] + '</style>' : m;
+  });
+  html = html.replace(/<script([^>]*) src=["']([^"']+)["']([^>]*)><\/script>/gi, function(m, a, s, b) {
+    const k = res(s); return k !== null ? '<script' + a + b + '>' + files[k] + '<' + '/script>' : m;
+  });
+  // link intercept — parent এ postMessage পাঠাও
+  const navJs = '<script>(function(){document.addEventListener("click",function(e){var a=e.target.closest("a");if(!a)return;var href=a.getAttribute("href");if(!href||/^(https?:|#|mailto:|tel:)/.test(href))return;var fname=href.split("/").pop().split("?")[0];window.parent.postMessage({type:"wevlo_nav",href:href,fname:fname},"*");e.preventDefault();});})();<' + '/script>';
+  html = html.replace('</body>', navJs + '</body>');
+  return html;
+}
+
+function refreshPreview() {
+  const result = buildPreviewHtml(currentFile);
+  if (!result) return;
+  document.getElementById('previewFrame').srcdoc = inlineSingle(result.htmlFile, result.files);
+}
+
+function runPreview() {
+  if (editorInstance && currentFile) {
+    currentProject.files[currentFile] = editorInstance.getValue();
+  }
+  const result = buildPreviewHtml(currentFile);
+  if (!result) { showToast('কোনো HTML file নেই।', 'error'); return; }
+  const payload = JSON.stringify({ htmlFile: result.htmlFile, files: result.files });
+  // IndexedDB → sessionStorage → inline overlay (fallback chain)
+  try {
+    WevloDB.setPreview(payload).then(() => {
+      Nav.go('/preview');
+    }).catch(() => {
+      try { sessionStorage.setItem('wevlo_preview', payload); Nav.go('/preview'); }
+      catch(e) { showInlinePreview(inlineSingle(result.htmlFile, result.files), result.files, result.htmlFile); }
+    });
+  } catch(e) {
+    showInlinePreview(inlineSingle(result.htmlFile, result.files), result.files, result.htmlFile);
+  }
+}
+
+function showInlinePreview(html, allFiles, startFile) {
+  let ov = document.getElementById('previewOverlay');
+  if (!ov) {
+    ov = document.createElement('div');
+    ov.id = 'previewOverlay';
+    ov.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:99999;background:#fff;display:flex;flex-direction:column;';
+    ov.innerHTML = '<div style="background:#1e1e2e;padding:8px 12px;display:flex;align-items:center;gap:10px;flex-shrink:0">' +
+      '<button onclick="document.getElementById(&quot;previewOverlay&quot;).remove()" style="background:#2d2d3d;border:none;color:#a78bfa;border-radius:8px;padding:6px 14px;font-size:.8rem;cursor:pointer;font-weight:600">← Back</button>' +
+      '<span id="previewOverlayTitle" style="color:#fff;font-size:.85rem">Preview</span></div>' +
+      '<iframe id="previewOverlayFrame" style="flex:1;border:none;width:100%;height:100%" sandbox="allow-scripts allow-same-origin allow-forms allow-modals allow-popups"></iframe>';
+    document.body.appendChild(ov);
+
+    // Multi-page navigation support
+    window.addEventListener('message', function _ovNav(e) {
+      if (!document.getElementById('previewOverlay')) {
+        window.removeEventListener('message', _ovNav);
+        return;
+      }
+      if (!e.data || e.data.type !== 'wevlo_nav') return;
+      const _files = currentProject.files || {};
+      if (editorInstance && currentFile) _files[currentFile] = editorInstance.getValue();
+      const fname = e.data.fname;
+      const href  = e.data.href;
+      const allHtml = Object.keys(_files).filter(f => f.endsWith('.html'));
+      const target = allHtml.find(f => f === href || f === fname || f.endsWith('/' + fname));
+      if (target) {
+        document.getElementById('previewOverlayTitle').textContent = fname;
+        document.getElementById('previewOverlayFrame').srcdoc = inlineSingle(target, _files);
+      }
+    });
+  }
+  if (startFile) {
+    const fname = startFile.includes('/') ? startFile.substring(startFile.lastIndexOf('/') + 1) : startFile;
+    const titleEl = document.getElementById('previewOverlayTitle');
+    if (titleEl) titleEl.textContent = fname;
+  }
+  document.getElementById('previewOverlayFrame').srcdoc = html;
+}
+function openFullPreview() { runPreview(); }
+
+function editorUndo() { editorInstance.undo(); }
+function editorRedo() { editorInstance.redo(); }
+function toggleComment() { editorInstance.execCommand('toggleComment'); }
+function toggleWordWrap() {
+  wordWrap = !wordWrap;
+  editorInstance.setOption('lineWrapping', wordWrap);
+  document.getElementById('wrapBtn').style.color = wordWrap ? '' : '#555';
+  document.getElementById('statusWordWrap').textContent = 'Wrap: ' + (wordWrap ? 'ON' : 'OFF');
+  const mmWrap = document.getElementById('mmWrapBtn');
+  if (mmWrap) mmWrap.innerHTML = mmWrap.innerHTML.replace(/Word Wrap: \w+/, 'Word Wrap: ' + (wordWrap ? 'ON' : 'OFF'));
+}
+function changeFontSize(delta) {
+  fontSize = Math.max(10, Math.min(28, fontSize + delta));
+  editorInstance.getWrapperElement().style.fontSize = fontSize + 'px';
+  editorInstance.refresh();
+}
+function formatCode() { showToast('Code formatted ✓','success'); }
+function toggleSidebar() {
+  const isMobile = window.innerWidth <= 700;
+  const sidebar  = document.getElementById('fileSidebar');
+  const backdrop = document.getElementById('sidebarBackdrop');
+
+  if (isMobile) {
+    // Mobile: overlay mode
+    const isOpen = sidebar.classList.toggle('mobile-open');
+    backdrop.classList.toggle('show', isOpen);
+    // body scroll lock
+    document.body.style.overflow = isOpen ? 'hidden' : '';
+  } else {
+    // Desktop: collapse mode
+    sidebar.classList.toggle('collapsed');
+    setTimeout(() => editorInstance.refresh(), 220);
+  }
+}
+
+function closeSidebarMobile() {
+  document.getElementById('fileSidebar').classList.remove('mobile-open');
+  document.getElementById('sidebarBackdrop').classList.remove('show');
+  document.body.style.overflow = '';
+}
+
+// ── Three-dot menu ──
+function toggleMoreMenu() {
+  const dd = document.getElementById('moreMenuDropdown');
+  dd.classList.toggle('open');
+  if (dd.classList.contains('open')) {
+    setTimeout(() => document.addEventListener('click', _closeMoreMenuOnOutside, { once: true }), 0);
+  }
+}
+function closeMoreMenu() {
+  document.getElementById('moreMenuDropdown').classList.remove('open');
+}
+function _closeMoreMenuOnOutside(e) {
+  const dd  = document.getElementById('moreMenuDropdown');
+  const btn = document.getElementById('moreMenuBtn');
+  if (!dd.contains(e.target) && e.target !== btn) closeMoreMenu();
+}
+
+function toggleFindBar() {
+  document.getElementById('findBar').classList.toggle('open');
+  if (document.getElementById('findBar').classList.contains('open'))
+    document.getElementById('findInput').focus();
+}
+function closeFindBar() { document.getElementById('findBar').classList.remove('open'); }
+function doFind() {
+  const q = document.getElementById('findInput').value;
+  if (!q) { document.getElementById('findResult').textContent = ''; return; }
+  const matches = (editorInstance.getValue().match(new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi'))||[]).length;
+  document.getElementById('findResult').textContent = matches + ' match(es)';
+}
+function doReplaceOne() {
+  const find = document.getElementById('findInput').value;
+  const rep  = document.getElementById('replaceInput').value;
+  if (!find) return;
+  const val = editorInstance.getValue();
+  const idx = val.toLowerCase().indexOf(find.toLowerCase());
+  if (idx < 0) { showToast('Not found','warning'); return; }
+  editorInstance.setValue(val.slice(0,idx) + rep + val.slice(idx+find.length));
+  showToast('Replaced 1 match','success');
+}
+function doReplaceAll() {
+  const find = document.getElementById('findInput').value;
+  const rep  = document.getElementById('replaceInput').value;
+  if (!find) return;
+  const re = new RegExp(find.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi');
+  const count = (editorInstance.getValue().match(re)||[]).length;
+  editorInstance.setValue(editorInstance.getValue().replace(re,rep));
+  showToast(`Replaced ${count} match(es)`,'success'); doFind();
+}
+
+function openJumpToLine() {
+  document.getElementById('jumpModal').classList.add('open');
+  setTimeout(() => document.getElementById('jumpLineInput').focus(), 100);
+}
+function doJumpToLine() {
+  const line = parseInt(document.getElementById('jumpLineInput').value) - 1;
+  if (isNaN(line)||line<0) return;
+  editorInstance.setCursor({line,ch:0}); editorInstance.scrollIntoView({line,ch:0},100); editorInstance.focus();
+  closeOverlay('jumpModal');
+}
+function insertSym(sym) {
+  const sel = editorInstance.getSelection();
+  if (sel) editorInstance.replaceSelection(sym);
+  else editorInstance.replaceRange(sym, editorInstance.getCursor());
+  editorInstance.focus();
+}
+const SNIPPETS = {
+  div:   '<div class="">\n  \n</div>',
+  span:  '<span class=""></span>',
+  a:     '<a href="" target="_blank"></a>',
+  img:   '<img src="" alt="" class=""/>',
+  input: '<input type="text" placeholder="" class=""/>',
+  fn:    'function name() {\n  \n}'
+};
+function insertSnippet(key) {
+  editorInstance.replaceRange(SNIPPETS[key]||'', editorInstance.getCursor());
+  editorInstance.focus();
+}
+function updateStatus() {
+  const cur = editorInstance.getCursor();
+  document.getElementById('statusLine').textContent = `Ln ${cur.line+1}, Col ${cur.ch+1}`;
+  document.getElementById('statusSize').textContent = editorInstance.getValue().length + ' chars';
+}
+function closeOverlay(id) { document.getElementById(id).classList.remove('open'); }
+
+document.addEventListener('keydown', e => {
+  if (e.key==='Escape') { closeOverlay('newFileModal'); closeOverlay('jumpModal'); closeFindBar(); }
+  if ((e.ctrlKey||e.metaKey) && e.key==='s') { e.preventDefault(); saveAll(); }
+});
+['newFileModal','jumpModal','driveModal'].forEach(id => {
+  document.getElementById(id).addEventListener('click', function(e) { if(e.target===this) closeOverlay(id); });
+});
+document.getElementById('jumpLineInput').addEventListener('keydown', e => { if(e.key==='Enter') doJumpToLine(); });
+document.getElementById('newFileName').addEventListener('keydown', e => { if(e.key==='Enter') createNewFile(); });
+document.getElementById('newFolderName').addEventListener('keydown', e => { if(e.key==='Enter') createNewFolder(); });
+document.getElementById('renameInput').addEventListener('keydown', e => { if(e.key==='Enter') doRename(); });
+
+// ══════════════════════════════════════════════
+// GOOGLE DRIVE BACKUP SYSTEM
+// ══════════════════════════════════════════════
+const DRIVE_CLIENT_ID = ''; // Google Cloud Console থেকে Client ID বসান
+const DRIVE_SCOPE     = 'https://www.googleapis.com/auth/drive.file';
+let   driveToken      = null;
+let   driveSignedIn   = false;
+
+function handleDriveClick() {
+  checkDriveAuth();
+  if (driveSignedIn) {
+    // connected — সরাসরি save করো
+    saveToDrive();
+  } else {
+    // connected না — modal দেখাও
+    openDriveModal();
+  }
+}
+
+function openDriveModal() {
+  checkDriveAuth();
+  document.getElementById('driveModal').classList.add('open');
+}
+
+function checkDriveAuth() {
+  // localStorage এ token আছে কিনা দেখো (persistent)
+  const saved = localStorage.getItem('wevlo_drive_token');
+  const expiry = parseInt(localStorage.getItem('wevlo_drive_expiry') || '0');
+  if (saved && expiry > Date.now()) {
+    driveToken    = saved;
+    driveSignedIn = true;
+    updateDriveUI(true);
+  } else {
+    localStorage.removeItem('wevlo_drive_token');
+    localStorage.removeItem('wevlo_drive_expiry');
+    driveToken    = null;
+    driveSignedIn = false;
+    updateDriveUI(false);
+  }
+}
+
+function updateDriveUI(signedIn) {
+  const statusEl  = document.getElementById('driveStatus');
+  const signInBtn = document.getElementById('driveSignInBtn');
+  const saveBtn   = document.getElementById('driveSaveBtn');
+  if (!statusEl) return;
+  if (signedIn) {
+    statusEl.textContent    = '✅ Google Drive সংযুক্ত আছে।';
+    statusEl.style.color    = '#10b981';
+    signInBtn.style.display = 'none';
+    saveBtn.style.display   = 'flex';
+  } else if (!DRIVE_CLIENT_ID) {
+    statusEl.innerHTML      = '⚠️ Google Client ID সেট নেই।<br><span style="color:#666;font-size:.7rem">নিচের .json ডাউনলোড অপশন ব্যবহার করুন।</span>';
+    statusEl.style.color    = '#f59e0b';
+    signInBtn.style.display = 'none';
+    saveBtn.style.display   = 'none';
+  } else {
+    statusEl.textContent    = 'Google Drive এ সাইন ইন করুন।';
+    statusEl.style.color    = '#f59e0b';
+    signInBtn.style.display = 'flex';
+    saveBtn.style.display   = 'none';
+  }
+}
+
+function signInAndSaveDrive() {
+  if (!DRIVE_CLIENT_ID) {
+    showToast('Google Client ID সেট নেই — .json ডাউনলোড করে Drive এ নিজে রাখুন।', 'warning');
+    downloadBackup();
+    return;
+  }
+  // redirect URI: current page
+  const redirectUri = location.origin + location.pathname + location.search;
+  // state এ "afterAuth=save" রাখো যাতে ফিরে এলে auto-save হয়
+  const state = encodeURIComponent(JSON.stringify({ afterAuth: 'save', search: location.search }));
+  const url = `https://accounts.google.com/o/oauth2/v2/auth`
+    + `?client_id=${DRIVE_CLIENT_ID}`
+    + `&redirect_uri=${encodeURIComponent(redirectUri)}`
+    + `&response_type=token`
+    + `&scope=${encodeURIComponent(DRIVE_SCOPE)}`
+    + `&state=${state}`
+    + `&prompt=consent`;
+  window.location.href = url;
+}
+
+// page load এ OAuth callback handle করো
+(function handleOAuthCallback() {
+  const hash = window.location.hash;
+  if (!hash.includes('access_token=')) return;
+  const params      = new URLSearchParams(hash.slice(1));
+  driveToken        = params.get('access_token');
+  const expiresIn   = parseInt(params.get('expires_in') || '3600');
+  driveSignedIn     = true;
+  // localStorage এ সেভ করো — পরের বার আর সাইন ইন লাগবে না
+  localStorage.setItem('wevlo_drive_token',  driveToken);
+  localStorage.setItem('wevlo_drive_expiry', String(Date.now() + expiresIn * 1000));
+  // URL এ token সরিয়ে দাও
+  const stateRaw = params.get('state');
+  let afterSave = false;
+  try { afterSave = JSON.parse(decodeURIComponent(stateRaw || '{}')).afterAuth === 'save'; } catch(e) {}
+  history.replaceState(null, '', window.location.pathname + window.location.search);
+  showToast('✅ Google Drive সংযুক্ত হয়েছে!', 'success');
+  if (afterSave) {
+    // init শেষ হওয়ার পর auto-save করো
+    setTimeout(() => saveToDrive(), 1500);
+  }
+})();
+
+async function saveToDrive() {
+  if (!driveToken) {
+    signInAndSaveDrive();
+    return;
+  }
+  currentProject.files[currentFile] = editorInstance.getValue();
+  currentProject.updatedAt = Date.now();
+  saveProjectSync(); // IndexedDB তেও রাখো
+
+  const content  = JSON.stringify(currentProject, null, 2);
+  const fileName = `wevlo_${currentProject.name.replace(/\s+/g,'_')}_${currentProject.id}.json`;
+  const metadata = { name: fileName, mimeType: 'application/json' };
+  const form     = new FormData();
+  form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+  form.append('file',     new Blob([content],                  { type: 'application/json' }));
+
+  showToast('Drive এ সেভ হচ্ছে…', 'default');
+  try {
+    const res = await fetch(
+      'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart',
+      { method: 'POST', headers: { Authorization: 'Bearer ' + driveToken }, body: form }
+    );
+    if (res.ok) {
+      showToast('✅ Google Drive এ সেভ হয়েছে!', 'success');
+      closeOverlay('driveModal');
+    } else if (res.status === 401) {
+      // token মেয়াদ শেষ
+      localStorage.removeItem('wevlo_drive_token');
+      localStorage.removeItem('wevlo_drive_expiry');
+      driveToken = null; driveSignedIn = false;
+      updateDriveUI(false);
+      showToast('Session শেষ। আবার সাইন ইন করুন।', 'warning');
+    } else {
+      showToast('Drive সেভ ব্যর্থ হয়েছে (error ' + res.status + ')', 'error');
+    }
+  } catch(e) {
+    showToast('Drive সেভ ব্যর্থ: ' + e.message, 'error');
+  }
+}
+
+// .json ডাউনলোড
+function downloadBackup() {
+  currentProject.files[currentFile] = editorInstance.getValue();
+  const content  = JSON.stringify(currentProject, null, 2);
+  const fileName = `wevlo_${currentProject.name.replace(/\s+/g,'_')}_${currentProject.id}.json`;
+  downloadBlob(new Blob([content], { type: 'application/json' }), fileName);
+  showToast('Backup ডাউনলোড হয়েছে!', 'success');
+}
+
+// backup file থেকে লোড
+function loadFromFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async e => {
+    try {
+      const proj = JSON.parse(e.target.result);
+      if (!proj.id || !proj.files) throw new Error('Invalid backup file');
+      const allProjects = await WevloDB.getProjects();
+      const idx = allProjects.findIndex(p => p.id === proj.id);
+      if (idx >= 0) {
+        showConfirm({ icon:'⚠️', title:'ওভাররাইট?', message:'"' + proj.name + '" ইতিমধ্যে আছে। ওভাররাইট করবেন?', okLabel:'ওভাররাইট', okClass:'danger', onOk:() => _doImportProject(proj) });
+        return;
+      }
+      await _doImportProject(proj);
+      closeOverlay('driveModal');
+      showToast('✅ Project লোড হয়েছে: ' + proj.name, 'success');
+    } catch(err) {
+      showToast('❌ ফাইল পড়তে ব্যর্থ: ' + err.message, 'error');
+    }
+  };
+  reader.readAsText(file);
+  input.value = '';
+}
+
+async function _doImportProject(proj) {
+  const allProjects = await WevloDB.getProjects();
+  const idx = allProjects.findIndex(p => p.id === proj.id);
+  if (idx >= 0) allProjects[idx] = proj; else allProjects.unshift(proj);
+  await WevloDB.setProjects(allProjects);
+  currentProject = proj;
+  openTabs = []; unsavedFiles.clear();
+  const firstFile = Object.keys(proj.files)[0];
+  renderFileList();
+  if (firstFile) openFile(firstFile);
+  document.getElementById('projectNameBadge').textContent = proj.name;
+  showToast('Project imported: ' + proj.name, 'success');
+}
+
+// ── Select All fix (CodeMirror) ──
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'a') {
+    if (editorInstance && document.activeElement && document.activeElement.closest('.CodeMirror')) {
+      e.preventDefault();
+      editorInstance.execCommand('selectAll');
+    }
+  }
+});
+
+init();
+</script>
+<script src="../js/code.js"></script>
+</body>
+</html>

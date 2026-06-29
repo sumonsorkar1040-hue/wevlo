@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Wevlo — My Projects</title>
+<link rel="stylesheet" href="../css/style.css"/>
+<style>
+.project-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 12px;
+}
+.project-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  cursor: pointer;
+  transition: all var(--transition);
+  position: relative;
+}
+.project-card:hover {
+  border-color: var(--primary);
+  box-shadow: var(--shadow);
+  transform: translateY(-2px);
+}
+.project-thumb {
+  height: 110px;
+  background: linear-gradient(135deg, var(--primary-50), var(--primary-100));
+  display: flex; align-items: center; justify-content: center;
+  position: relative; overflow: hidden;
+}
+.project-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.project-thumb-icon { color: var(--primary-100); }
+.project-badge {
+  position: absolute; top: 8px; right: 8px;
+  font-size: .63rem; font-weight: 800;
+  padding: 3px 7px; border-radius: 100px;
+  background: var(--primary); color: #fff;
+  text-transform: uppercase; letter-spacing: .03em;
+}
+.project-body { padding: 12px 14px; }
+.project-name {
+  font-size: .875rem; font-weight: 700;
+  margin-bottom: 4px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.project-meta {
+  font-size: .73rem; color: var(--text-muted);
+  display: flex; align-items: center; gap: 4px;
+}
+.project-actions {
+  display: flex; gap: 6px;
+  padding: 0 12px 12px;
+}
+.project-action-btn {
+  flex: 1; padding: 6px 4px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: .73rem; font-weight: 700;
+  color: var(--text-muted);
+  cursor: pointer; transition: all var(--transition);
+  text-align: center; font-family: var(--font);
+}
+.project-action-btn:hover { background: var(--primary); color: #fff; border-color: var(--primary); }
+.project-action-btn.danger:hover { background: var(--danger); border-color: var(--danger); }
+
+
+
+/* ── Folder thumbnail ── */
+.project-folder-thumb {
+  height: 110px;
+  position: relative;
+  overflow: hidden;
+  display: flex; align-items: flex-end; justify-content: center;
+  padding-bottom: 10px;
+}
+.project-folder-thumb::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: var(--folder-bg, linear-gradient(135deg, #dbeafe, #eff6ff));
+}
+.pf-body {
+  position: absolute;
+  bottom: 0; left: 10px; right: 10px;
+  height: 72px;
+  border-radius: 6px 6px 8px 8px;
+  background: var(--folder-color, #3b82f6);
+  box-shadow: 0 4px 16px rgba(0,0,0,.15), inset 0 1px 0 rgba(255,255,255,.2);
+}
+.pf-tab {
+  position: absolute;
+  bottom: 72px; left: 10px;
+  width: 44px; height: 14px;
+  border-radius: 6px 6px 0 0;
+  background: var(--folder-tab, #2563eb);
+}
+.pf-files {
+  position: absolute;
+  bottom: 28px;
+  display: flex; gap: 5px;
+  justify-content: center;
+  width: 100%;
+}
+.pf-file {
+  width: 28px; height: 36px;
+  border-radius: 3px 5px 3px 3px;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0,0,0,.15);
+  position: relative;
+  transform: rotate(var(--rot, 0deg));
+}
+.pf-file::before {
+  content: '';
+  position: absolute; top: 0; right: 0;
+  width: 8px; height: 8px;
+  background: var(--folder-color, #3b82f6);
+  opacity: .25;
+  clip-path: polygon(0 0, 100% 100%, 100% 0);
+  border-radius: 0 3px 0 0;
+}
+.pf-file-line {
+  position: absolute;
+  left: 5px; right: 5px;
+  height: 2px; border-radius: 1px;
+  background: #e2e8f0;
+}
+.pf-file-line:nth-child(1) { top: 12px; }
+.pf-file-line:nth-child(2) { top: 17px; width: 60%; }
+.pf-file-line:nth-child(3) { top: 22px; width: 80%; }
+.pf-count {
+  position: absolute;
+  bottom: 14px;
+  font-size: .65rem; font-weight: 800;
+  color: rgba(255,255,255,.85);
+  letter-spacing: .02em;
+  z-index: 2;
+}
+
+/* New project modal */
+.template-options {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+}
+.template-opt {
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 12px;
+  cursor: pointer; text-align: center;
+  transition: all var(--transition);
+}
+.template-opt:hover, .template-opt.selected {
+  border-color: var(--primary); background: var(--primary-50);
+}
+.template-opt .t-icon {
+  width: 40px; height: 40px;
+  border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 8px;
+  background: var(--surface2); color: var(--text-muted);
+}
+.template-opt.selected .t-icon { background: var(--primary-100); color: var(--primary); }
+.template-opt .label { font-size: .8rem; font-weight: 700; }
+.template-opt .sub   { font-size: .72rem; color: var(--text-muted); margin-top: 2px; }
+
+@media (max-width: 640px) {
+  .project-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+}
+@media (max-width: 380px) {
+  .project-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body class="page-projects">
+
+<div id="headerMount"></div>
+<div id="sidebarBackdrop" class="sidebar-backdrop" onclick="closeSidebar()"></div>
+
+<div class="layout">
+  <div id="sidebarMount"></div>
+
+  <main class="main-content fade-in">
+
+    <div class="page-header">
+      <div class="page-header-text">
+        <h1>My Projects</h1>
+        <p id="projectCount">Loading…</p>
+      </div>
+      <button class="btn btn-primary" onclick="openNewProjectModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        New Project
+      </button>
+    </div>
+
+    <div class="project-grid" id="projectGrid">
+      <!-- Loaded by JS -->
+    </div>
+
+  </main>
+</div>
+
+<div id="mobileNavMount"></div>
+
+<!-- New Project Modal -->
+<div class="modal-overlay" id="newProjectModal" style="align-items:center;padding:20px">
+  <div class="modal" style="border-radius:16px;max-width:360px">
+    <div class="modal-header">
+      <div class="modal-title">Create New Project</div>
+      <div class="modal-close" onclick="closeModal('newProjectModal')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Project Name</label>
+      <input type="text" class="form-input" id="newProjectName" placeholder="My Awesome App"/>
+      <div class="form-error" id="newProjectNameErr">Name required</div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Start With</label>
+      <div class="template-options">
+        <div class="template-opt selected" id="optBlank" onclick="selectOpt('blank')">
+          <div class="t-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          </div>
+          <div class="label">Blank</div>
+          <div class="sub">Empty project</div>
+        </div>
+        <div class="template-opt" id="optWebview" onclick="selectOpt('webview')">
+          <div class="t-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          </div>
+          <div class="label">WebView</div>
+          <div class="sub">Website → App</div>
+        </div>
+        <div class="template-opt" id="optHtml" onclick="selectOpt('html')">
+          <div class="t-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          </div>
+          <div class="label">HTML/CSS/JS</div>
+          <div class="sub">Custom code</div>
+        </div>
+        <div class="template-opt" id="optTemplate" onclick="Nav.templates()">
+          <div class="t-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          </div>
+          <div class="label">Template</div>
+          <div class="sub">Marketplace</div>
+        </div>
+      </div>
+    </div>
+    <button class="btn btn-primary btn-full" onclick="createProject()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Create Project
+    </button>
+  </div>
+</div>
+
+<script src="../js/core.js"></script>
+<script>
+if (!requireAuth()) {}
+
+document.getElementById('headerMount').innerHTML    = buildHeader('projects');
+document.getElementById('sidebarMount').innerHTML   = buildSidebar('projects');
+document.getElementById('mobileNavMount').innerHTML = buildMobileNav('home');
+
+let allProjects = [];
+let selectedOpt = 'blank';
+
+async function init() {
+  allProjects = await WevloDB.getProjects();
+  document.getElementById('projectCount').textContent =
+    allProjects.length + ' project' + (allProjects.length !== 1 ? 's' : '');
+  renderProjects(allProjects);
+}
+
+function renderProjects(projects) {
+  const grid = document.getElementById('projectGrid');
+
+  if (!projects.length) {
+    grid.innerHTML = `
+      <div class="empty-state" style="grid-column:1/-1;padding:40px 20px">
+        <div class="icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <h3>No projects yet</h3>
+        <p>প্রথম project তৈরি করুন</p>
+      </div>`;
+    return;
+  }
+
+  // Folder colors — consistent per project name
+  const colors = [
+    { bg:'#dbeafe', folder:'#3b82f6', tab:'#2563eb' },
+    { bg:'#fce7f3', folder:'#ec4899', tab:'#db2777' },
+    { bg:'#d1fae5', folder:'#10b981', tab:'#059669' },
+    { bg:'#fef3c7', folder:'#f59e0b', tab:'#d97706' },
+    { bg:'#ede9fe', folder:'#8b5cf6', tab:'#7c3aed' },
+    { bg:'#ffedd5', folder:'#f97316', tab:'#ea580c' },
+    { bg:'#cffafe', folder:'#06b6d4', tab:'#0891b2' },
+  ];
+
+  grid.innerHTML = projects.map(p => {
+    const ci  = p.name.split('').reduce((a,c) => a + c.charCodeAt(0), 0) % colors.length;
+    const col = colors[ci];
+    const fileCount = p.files ? Object.keys(p.files).length : 1;
+
+    const thumb = p.icon
+      ? `<div class="project-thumb"><img src="${p.icon}" onerror="imgFallback(this)" alt="${p.name}"/><span class="project-badge">${p.type || 'HTML'}</span></div>`
+      : `<div class="project-folder-thumb" style="--folder-bg:linear-gradient(135deg,${col.bg},#fff);--folder-color:${col.folder};--folder-tab:${col.tab}">
+          <div class="pf-tab"></div>
+          <div class="pf-body"></div>
+          <div class="pf-files">
+            <div class="pf-file" style="--rot:-6deg">
+              <div class="pf-file-line"></div><div class="pf-file-line"></div><div class="pf-file-line"></div>
+            </div>
+            <div class="pf-file" style="--rot:0deg;transform:translateY(-4px) rotate(0deg)">
+              <div class="pf-file-line"></div><div class="pf-file-line"></div><div class="pf-file-line"></div>
+            </div>
+            <div class="pf-file" style="--rot:6deg">
+              <div class="pf-file-line"></div><div class="pf-file-line"></div><div class="pf-file-line"></div>
+            </div>
+          </div>
+          <div class="pf-count">${fileCount} file${fileCount !== 1 ? 's' : ''}</div>
+          <span class="project-badge">${p.type || 'HTML'}</span>
+        </div>`;
+
+    return `
+    <div class="project-card" onclick="Nav.editor('${p.id}')">
+      ${thumb}
+      <div class="project-body">
+        <div class="project-name">${p.name}</div>
+        <div class="project-meta">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          ${timeAgo(p.updatedAt || p.createdAt)}
+        </div>
+      </div>
+      <div class="project-actions">
+        <div class="project-action-btn" onclick="event.stopPropagation();Nav.editor('${p.id}')">Edit</div>
+        <div class="project-action-btn" onclick="event.stopPropagation();window.location.href='/build?p=${p.id}'">Build</div>
+        <div class="project-action-btn danger" onclick="event.stopPropagation();deleteProject('${p.id}')">Del</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filterProjects(q) {
+  const query = q.toLowerCase();
+  renderProjects(allProjects.filter(p => p.name.toLowerCase().includes(query)));
+}
+
+/* ── Header search helpers ── */
+function onProjectsHeaderInput(val) {
+  const clearBtn = document.getElementById('projectsSearchClear');
+  if (clearBtn) clearBtn.style.display = val ? 'flex' : 'none';
+}
+function clearProjectsHeaderSearch() {
+  const inp = document.getElementById('projectsHeaderSearch');
+  if (inp) { inp.value = ''; inp.focus(); }
+  const clearBtn = document.getElementById('projectsSearchClear');
+  if (clearBtn) clearBtn.style.display = 'none';
+  renderProjects(allProjects);
+}
+function toggleProjectsFilter() {
+  const dd = document.getElementById('projectsFilterDropdown');
+  const btn = document.getElementById('projectsFilterBtn');
+  if (!dd) return;
+  dd.classList.toggle('open');
+  if (btn) btn.classList.toggle('active', dd.classList.contains('open'));
+}
+function applyProjectsSort(by, el) {
+  // active state update
+  document.querySelectorAll('#projectsFilterDropdown .filter-option').forEach(b => b.classList.remove('selected'));
+  if (el) el.classList.add('selected');
+  // close dropdown
+  const dd = document.getElementById('projectsFilterDropdown');
+  const btn = document.getElementById('projectsFilterBtn');
+  if (dd) dd.classList.remove('open');
+  if (btn) btn.classList.remove('active');
+  // sort
+  sortProjects(by);
+}
+// close dropdown on outside click
+document.addEventListener('click', function(e) {
+  const dd = document.getElementById('projectsFilterDropdown');
+  const btn = document.getElementById('projectsFilterBtn');
+  if (dd && dd.classList.contains('open') && !dd.contains(e.target) && e.target !== btn && !btn?.contains(e.target)) {
+    dd.classList.remove('open');
+    if (btn) btn.classList.remove('active');
+  }
+});
+
+
+function sortProjects(by) {
+  const sorted = [...allProjects];
+  if (by === 'newest') sorted.sort((a, b) => b.createdAt - a.createdAt);
+  if (by === 'oldest') sorted.sort((a, b) => a.createdAt - b.createdAt);
+  if (by === 'name')   sorted.sort((a, b) => a.name.localeCompare(b.name));
+  renderProjects(sorted);
+}
+
+async function deleteProject(id) {
+  if (!confirm('Delete this project?')) return;
+  allProjects = allProjects.filter(p => p.id !== id);
+  await WevloDB.setProjects(allProjects);
+  document.getElementById('projectCount').textContent =
+    allProjects.length + ' project' + (allProjects.length !== 1 ? 's' : '');
+  renderProjects(allProjects);
+  showToast('Project deleted', 'default');
+}
+
+function openNewProjectModal() {
+  document.getElementById('newProjectModal').classList.add('open');
+  setTimeout(() => document.getElementById('newProjectName').focus(), 100);
+}
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function selectOpt(opt) {
+  selectedOpt = opt;
+  ['blank','webview','html','template'].forEach(o =>
+    document.getElementById('opt' + o.charAt(0).toUpperCase() + o.slice(1))
+      ?.classList.toggle('selected', o === opt));
+}
+
+async function createProject() {
+  const name = document.getElementById('newProjectName').value.trim();
+  if (!name) {
+    document.getElementById('newProjectNameErr').classList.add('show');
+    return;
+  }
+  // সব type এর জন্য starter files — editor কখনো ফাঁকা থাকবে না
+  const files = {
+    'index.html': [
+      '<!DOCTYPE html>',
+      '<html lang="en">',
+      '<head>',
+      '  <meta charset="UTF-8"/>',
+      '  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>',
+      '  <title>' + name + '</' + 'title>',
+      '  <link rel="stylesheet" href="style.css"/>',
+      '</' + 'head>',
+      '<body>',
+      '  <h1>' + name + '</' + 'h1>',
+      '  <p>Edit this file to get started.</p>',
+      '  <script src="script.js"><\/script>',
+      '</' + 'body>',
+      '</' + 'html>'
+    ].join('\n'),
+    'style.css': [
+      '* {',
+      '  box-sizing: border-box;',
+      '  margin: 0; padding: 0;',
+      '}',
+      'body {',
+      '  font-family: sans-serif;',
+      '  background: #f8fafc;',
+      '  color: #0f172a;',
+      '  padding: 20px;',
+      '}',
+      'h1 {',
+      '  font-size: 2rem;',
+      '  color: #2563eb;',
+      '  margin-bottom: 10px;',
+      '}'
+    ].join('\n'),
+    'script.js': "// JavaScript\nconsole.log('Hello from " + name + "!');"
+  };
+  const p = {
+    id: 'p_' + Date.now(), name, type: selectedOpt,
+    createdAt: Date.now(), updatedAt: Date.now(),
+    files
+  };
+  // IndexedDB তে save করো
+  try {
+    const fresh = await WevloDB.getProjects();
+    fresh.unshift(p);
+    await WevloDB.setProjects(fresh);
+    allProjects = fresh;
+  } catch(e) {
+    showToast('Project save ব্যর্থ: ' + e.message, 'error');
+    return;
+  }
+
+  closeModal('newProjectModal');
+  renderProjects(allProjects);
+  document.getElementById('projectCount').textContent =
+    allProjects.length + ' project' + (allProjects.length !== 1 ? 's' : '');
+  showToast('Project created! 🎉', 'success');
+
+  // data সরাসরি URL hash এ encode করে পাঠাও — সবচেয়ে নির্ভরযোগ্য
+  try {
+    const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(p))));
+    setTimeout(() => {
+      window.location.href = '/editor?p=' + encodeURIComponent(p.id) + '#d=' + encoded;
+    }, 80);
+  } catch(e) {
+    setTimeout(() => Nav.editor(p.id), 80);
+  }
+}
+
+document.getElementById('newProjectModal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal('newProjectModal');
+});
+
+init();
+</script>
+<script src="../js/code.js"></script>
+</body>
+</html>

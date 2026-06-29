@@ -1,0 +1,788 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Wevlo — Push Notifications</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0f1117; --surface: #1a1d27; --surface2: #22263a;
+    --border: #2e3350; --primary: #6c63ff; --primary-dim: #6c63ff22;
+    --success: #22c55e; --danger: #ef4444; --warn: #f59e0b;
+    --text: #e8eaf6; --text-muted: #8b8fa8; --text-light: #5a5e7a;
+    --radius: 10px; --radius-lg: 16px; --font: 'Segoe UI', system-ui, sans-serif;
+  }
+  body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; padding: 20px 16px 60px; }
+
+  .header { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; }
+  .header-icon { width: 42px; height: 42px; border-radius: 12px; background: linear-gradient(135deg,#6c63ff,#a78bfa); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .header h1 { font-size: 1.2rem; font-weight: 800; }
+  .header p { font-size: .75rem; color: var(--text-muted); margin-top: 2px; }
+
+  .status-bar { display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 14px; margin-bottom: 20px; font-size: .78rem; }
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-light); flex-shrink: 0; transition: background .3s; }
+  .status-dot.online  { background: var(--success); box-shadow: 0 0 6px var(--success); }
+  .status-dot.offline { background: var(--danger); }
+  .status-txt { flex: 1; color: var(--text-muted); }
+  .status-txt strong { color: var(--text); }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 18px; margin-bottom: 16px; }
+  .card-title { font-size: .8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 14px; display: flex; align-items: center; gap: 7px; }
+  .card-title svg { color: var(--primary); }
+
+  .form-group { margin-bottom: 12px; }
+  .form-label { display: block; font-size: .75rem; font-weight: 700; color: var(--text-muted); margin-bottom: 5px; }
+  .form-input { width: 100%; background: var(--surface2); border: 1.5px solid var(--border); border-radius: var(--radius); color: var(--text); padding: 10px 12px; font-size: .85rem; font-family: var(--font); transition: border-color .18s; outline: none; }
+  .form-input:focus { border-color: var(--primary); }
+  .form-input::placeholder { color: var(--text-light); }
+  textarea.form-input { resize: vertical; min-height: 80px; line-height: 1.5; }
+
+  .tabs { display: flex; gap: 4px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 4px; margin-bottom: 16px; }
+  .tab { flex: 1; padding: 8px; border: none; border-radius: 7px; background: transparent; color: var(--text-muted); font-family: var(--font); font-size: .78rem; font-weight: 700; cursor: pointer; transition: all .18s; }
+  .tab.active { background: var(--primary); color: #fff; }
+
+  .btn { width: 100%; padding: 13px; border: none; border-radius: var(--radius); font-family: var(--font); font-size: .9rem; font-weight: 800; cursor: pointer; transition: all .18s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .btn-primary { background: linear-gradient(135deg,#6c63ff,#a78bfa); color: #fff; }
+  .btn-primary:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 4px 18px #6c63ff55; }
+  .btn-primary:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+  .btn-secondary { background: var(--surface2); border: 1.5px solid var(--border); color: var(--text-muted); font-size: .8rem; padding: 9px; }
+  .btn-danger { background: #ef444420; border: 1.5px solid #ef4444; color: #ef4444; font-size: .8rem; padding: 9px; }
+
+  .token-list { display: flex; flex-direction: column; gap: 8px; }
+  .token-item { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 12px; display: flex; align-items: center; gap: 10px; }
+  .token-check { width: 18px; height: 18px; border-radius: 5px; border: 2px solid var(--border); background: transparent; cursor: pointer; flex-shrink: 0; appearance: none; display: flex; align-items: center; justify-content: center; transition: all .15s; position: relative; }
+  .token-check:checked { background: var(--primary); border-color: var(--primary); }
+  .token-check:checked::after { content: ''; position: absolute; width: 5px; height: 9px; border: 2px solid #fff; border-top: none; border-left: none; transform: rotate(45deg) translate(-1px,-1px); }
+  .token-info { flex: 1; min-width: 0; }
+  .token-label { font-size: .78rem; font-weight: 700; color: var(--text); }
+  .token-val { font-size: .65rem; color: var(--text-light); font-family: monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .token-time { font-size: .6rem; color: var(--text-light); margin-top: 2px; }
+  .token-del { background: none; border: none; color: var(--text-light); cursor: pointer; padding: 4px; border-radius: 6px; transition: color .15s; }
+  .token-del:hover { color: var(--danger); }
+
+  .log-area { background: #0a0d14; border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; font-family: monospace; font-size: .72rem; line-height: 1.7; min-height: 100px; max-height: 220px; overflow-y: auto; color: #c9d1d9; }
+  .log-line { margin-bottom: 1px; }
+  .log-ok   { color: var(--success); }
+  .log-err  { color: var(--danger); }
+  .log-info { color: #60a5fa; }
+  .log-ts   { color: #3d444d; margin-right: 6px; }
+
+  .empty { text-align: center; padding: 28px 16px; color: var(--text-light); font-size: .8rem; }
+  .empty svg { margin: 0 auto 10px; display: block; opacity: .4; }
+
+  .select-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; font-size: .75rem; }
+  .select-row label { color: var(--text-muted); display: flex; align-items: center; gap: 6px; cursor: pointer; }
+
+  .spinner { width: 18px; height: 18px; border-radius: 50%; border: 2px solid rgba(255,255,255,.3); border-top-color: #fff; animation: spin .7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 20px; font-size: .65rem; font-weight: 700; }
+  .badge-purple { background: var(--primary-dim); color: #a78bfa; }
+  .badge-green  { background: #22c55e20; color: #22c55e; }
+
+  .progress-bar { height: 4px; background: var(--surface2); border-radius: 2px; margin-top: 10px; overflow: hidden; display: none; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg,#6c63ff,#a78bfa); border-radius: 2px; transition: width .3s; }
+
+  .hint { font-size: .68rem; color: var(--text-light); margin-top: 5px; line-height: 1.5; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-icon">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+  </div>
+  <div>
+    <h1>Push Notifications</h1>
+    <p>Send notifications to your app users</p>
+  </div>
+</div>
+
+<!-- Server Status -->
+<div class="status-bar">
+  <div class="status-dot" id="statusDot"></div>
+  <div class="status-txt" id="statusTxt">Checking server...</div>
+  <button class="btn-secondary btn" style="width:auto;padding:5px 12px;font-size:.7rem" onclick="checkServer()">Refresh</button>
+</div>
+
+<!-- App ID + Password input -->
+<div class="card" id="authCard">
+  <div class="card-title">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+    Your App ID
+  </div>
+  <div style="display:flex;gap:8px;margin-bottom:8px">
+    <input class="form-input" id="appIdInput" placeholder="com.yourapp.xyz"
+           style="flex:1;font-family:monospace;font-size:.82rem"
+           oninput="onAppIdChange()"/>
+  </div>
+  <div class="hint" style="margin-bottom:10px">Enter your app's package name (e.g. com.wevlo.app)</div>
+
+  <!-- Password field -->
+  <div style="position:relative;margin-bottom:8px">
+    <input class="form-input" id="appPasswordInput" type="password"
+           placeholder="App Password"
+           style="font-size:.82rem;padding-right:42px"
+           onkeydown="if(event.key==='Enter')loadAppTokens()"/>
+    <button onclick="togglePwdVisibility()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-muted);padding:4px" id="pwdEyeBtn">
+      <svg id="eyeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+    </button>
+  </div>
+  <div class="hint" style="margin-bottom:12px;color:var(--warn)">
+    🔒 Enter the password you set when building the app
+  </div>
+
+  <button class="btn btn-primary" style="font-size:.85rem" onclick="loadAppTokens()">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+    Load &amp; Authenticate
+  </button>
+
+  <!-- Auth status -->
+  <div id="authStatus" style="display:none;margin-top:10px;padding:8px 12px;border-radius:8px;font-size:.76rem;font-weight:700"></div>
+</div>
+
+<!-- Authenticated badge -->
+<div id="authBadge" style="display:none;background:#22c55e18;border:1.5px solid #22c55e44;border-radius:10px;padding:10px 14px;margin-bottom:16px;display:none;align-items:center;gap:10px">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+  <div style="flex:1">
+    <div style="font-size:.78rem;font-weight:700;color:#22c55e">Authenticated</div>
+    <div id="authBadgeApp" style="font-size:.7rem;color:var(--text-muted);font-family:monospace"></div>
+  </div>
+  <button onclick="logoutAuth()" style="background:none;border:1px solid #22c55e44;border-radius:6px;color:#22c55e;font-size:.7rem;padding:4px 8px;cursor:pointer">Change</button>
+</div>
+
+<!-- Main content (shown only after auth) -->
+<div id="mainContent" style="display:none">
+
+<!-- Tabs -->
+<div class="tabs">
+  <button class="tab active" id="tabSend"   onclick="showTab('send')">📤 Send</button>
+  <button class="tab"        id="tabTokens" onclick="showTab('tokens')">📱 Devices</button>
+  <button class="tab"        id="tabAdd"    onclick="showTab('add')">➕ Add Token</button>
+</div>
+
+<!-- ══ SEND TAB ══ -->
+<div id="panelSend">
+  <div class="card">
+    <div class="card-title">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      Compose Notification
+    </div>
+    <div class="form-group">
+      <label class="form-label">Title *</label>
+      <input class="form-input" id="notifTitle" placeholder="Notification title"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Message *</label>
+      <textarea class="form-input" id="notifBody" placeholder="Write your message here..."></textarea>
+    </div>
+    <div class="form-group" style="margin-bottom:0">
+      <label class="form-label">Image <span style="color:var(--text-light);font-weight:400">(optional)</span></label>
+
+      <!-- Upload / URL toggle -->
+      <div style="display:flex;gap:6px;margin-bottom:8px">
+        <button id="btnModeUpload" onclick="setImageMode('upload')"
+          style="flex:1;padding:7px;border-radius:8px;border:1.5px solid var(--primary);background:var(--primary);color:#fff;font-size:.75rem;font-weight:700;cursor:pointer">
+          📁 Upload Image
+        </button>
+        <button id="btnModeUrl" onclick="setImageMode('url')"
+          style="flex:1;padding:7px;border-radius:8px;border:1.5px solid var(--border);background:transparent;color:var(--text-muted);font-size:.75rem;font-weight:700;cursor:pointer">
+          🔗 Image URL
+        </button>
+      </div>
+
+      <!-- File upload -->
+      <div id="modeUpload">
+        <input type="file" id="imgFile" accept="image/*" style="display:none" onchange="onFileSelected(this)"/>
+        <div id="dropZone" onclick="document.getElementById('imgFile').click()"
+          style="border:2px dashed var(--border);border-radius:10px;padding:20px;text-align:center;cursor:pointer;transition:border-color .2s;background:var(--surface2)">
+          <div style="font-size:1.8rem;margin-bottom:6px">🖼️</div>
+          <div style="font-size:.78rem;color:var(--text-muted)">Tap to select image</div>
+          <div style="font-size:.65rem;color:var(--text-light);margin-top:3px">JPG, PNG, GIF, WEBP</div>
+        </div>
+        <div id="uploadStatus" style="display:none;margin-top:8px;font-size:.75rem;text-align:center"></div>
+      </div>
+
+      <!-- URL input -->
+      <div id="modeUrl" style="display:none">
+        <div style="display:flex;gap:8px;align-items:center">
+          <input class="form-input" id="notifImageUrl" placeholder="https://example.com/image.jpg"
+                 oninput="onUrlInput(this.value)" style="flex:1"/>
+          <button onclick="clearImage()" style="background:none;border:none;color:var(--text-light);cursor:pointer;padding:4px;font-size:1.1rem">✕</button>
+        </div>
+      </div>
+
+      <!-- Preview -->
+      <div id="imgPreviewWrap" style="display:none;margin-top:8px;border-radius:8px;overflow:hidden;border:1px solid var(--border);position:relative">
+        <img id="imgPreview" style="width:100%;max-height:180px;object-fit:cover;display:block"/>
+        <button onclick="clearImage()"
+          style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.6);border:none;color:#fff;border-radius:50%;width:26px;height:26px;cursor:pointer;font-size:.9rem">✕</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+      Target Devices
+    </div>
+    <div class="select-row">
+      <label>
+        <input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)" style="accent-color:var(--primary)"/>
+        Select all
+      </label>
+      <span class="badge badge-purple" id="selectedCount">0 selected</span>
+    </div>
+    <div class="token-list" id="sendTokenList">
+      <div class="empty">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="2" width="14" height="20" rx="2"/></svg>
+        No devices. Load tokens or add manually.
+      </div>
+    </div>
+  </div>
+
+  <button class="btn btn-primary" id="sendBtn" onclick="sendNotifications()">
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+    <span id="sendTxt">Send Notification</span>
+    <div class="spinner" id="sendSpinner" style="display:none"></div>
+  </button>
+
+  <div class="progress-bar" id="progressBar">
+    <div class="progress-fill" id="progressFill" style="width:0%"></div>
+  </div>
+
+  <!-- Log -->
+  <div class="card" style="margin-top:16px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div class="card-title" style="margin-bottom:0">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+        Activity Log
+      </div>
+      <button onclick="clearLog()" style="background:none;border:none;color:var(--text-light);font-size:.68rem;cursor:pointer">Clear</button>
+    </div>
+    <div class="log-area" id="logArea"><span style="color:#3d444d">— waiting —</span></div>
+  </div>
+</div>
+
+<!-- ══ TOKENS TAB ══ -->
+<div id="panelTokens" style="display:none">
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div class="card-title" style="margin-bottom:0">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/></svg>
+        Saved Devices
+      </div>
+      <span class="badge badge-green" id="deviceCount">0 devices</span>
+    </div>
+    <div class="token-list" id="manageTokenList">
+      <div class="empty">No devices saved yet.</div>
+    </div>
+  </div>
+  <button class="btn btn-danger" onclick="clearAllTokens()" style="margin-top:0">
+    🗑 Clear All Devices
+  </button>
+</div>
+
+<!-- ══ ADD TOKEN TAB ══ -->
+<div id="panelAdd" style="display:none">
+  <div class="card">
+    <div class="card-title">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Add Device Token
+    </div>
+    <div class="form-group">
+      <label class="form-label">Device Name / Label</label>
+      <input class="form-input" id="newLabel" placeholder="e.g. My Phone, Test Device"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">FCM Token *</label>
+      <textarea class="form-input" id="newToken" placeholder="Paste FCM device token here..." style="min-height:100px;font-family:monospace;font-size:.72rem"></textarea>
+    </div>
+    <button class="btn btn-primary" onclick="addToken()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Save Device
+    </button>
+
+    <div style="margin-top:16px;padding:12px;background:var(--surface2);border-radius:var(--radius);border:1px solid var(--border)">
+      <div style="font-size:.72rem;font-weight:700;color:var(--text-muted);margin-bottom:6px">📌 Where to get the FCM Token?</div>
+      <div style="font-size:.7rem;color:var(--text-light);line-height:1.8">
+        1. Install your app on any device<br/>
+        2. When the app opens, the FCM token is automatically registered<br/>
+        3. Use the <strong style="color:var(--text)">"Load"</strong> button to load all tokens<br/>
+        4. Or paste a token manually here
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SERVER = 'https://dinalamin-din-push-server.hf.space';
+let currentAppId = localStorage.getItem('wevlo_last_appid') || '';
+
+// ── Init ──
+window.onload = () => {
+  // Pre-fill App ID only, no auto-load (password required)
+  if (currentAppId) {
+    document.getElementById('appIdInput').value = currentAppId;
+  }
+  renderSendList();
+  checkServer();
+};
+
+// ── App ID ──
+function getAppId() {
+  return document.getElementById('appIdInput').value.trim();
+}
+function onAppIdChange() {
+  currentAppId = getAppId();
+  localStorage.setItem('wevlo_last_appid', currentAppId);
+}
+
+// ── Load tokens from server (with password auth) ──
+async function loadAppTokens() {
+  const appId    = getAppId();
+  const password = document.getElementById('appPasswordInput').value.trim();
+
+  if (!appId)    { showAuthStatus('❌ Please enter an App ID first', 'err'); return; }
+  if (!password) { showAuthStatus('❌ Please enter a password', 'err'); return; }
+
+  // Button loading state
+  const btn = document.querySelector('#authCard .btn-primary');
+  const origText = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="animation:spin .8s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Authenticating...';
+
+  showAuthStatus('⏳ Verifying credentials...', 'info');
+  document.getElementById('authStatus').style.background = 'var(--surface2)';
+  document.getElementById('authStatus').style.border = '1.5px solid var(--border)';
+  document.getElementById('authStatus').style.color = 'var(--text-muted)';
+
+  try {
+    const res  = await fetch(SERVER + '/tokens?appId=' + encodeURIComponent(appId) + '&password=' + encodeURIComponent(password),
+                             { signal: AbortSignal.timeout(8000) });
+    const data = await res.json();
+
+    btn.disabled = false;
+    btn.innerHTML = origText;
+
+    if (res.status === 401 || data.error === 'unauthorized' || data.error === 'invalid_password') {
+      showAuthStatus('❌ Wrong password! Please try again.', 'err');
+      document.getElementById('appPasswordInput').focus();
+      return;
+    }
+
+    if (data.success) {
+      currentAppId    = appId;
+      currentPassword = password;
+      localStorage.setItem('wevlo_last_appid', appId);
+      // password save করো না localStorage-এ (security)
+
+      const formatted = data.tokens.map(t => ({
+        label:   t.userAgent || 'Android Device',
+        token:   t.token,
+        addedAt: t.registeredAt || Date.now()
+      }));
+      saveTokensLocal(formatted);
+      renderSendList();
+      renderManageList();
+
+      showAuthStatus('✓ Authenticated!', 'ok');
+      setTimeout(() => showMainContent(appId), 500);
+      log(`✓ ${data.count} device loaded for ${appId}`, 'ok');
+    } else {
+      showAuthStatus('❌ ' + (data.error || 'Load failed'), 'err');
+    }
+  } catch (e) {
+    btn.disabled = false;
+    btn.innerHTML = origText;
+    showAuthStatus('❌ Server error: ' + e.message, 'err');
+  }
+}
+
+// ── Token local storage ──
+function storageKey() { return 'wevlo_tokens_' + getAppId(); }
+
+function getTokens() {
+  if (!getAppId()) return [];
+  try { return JSON.parse(localStorage.getItem(storageKey()) || '[]'); }
+  catch { return []; }
+}
+function saveTokensLocal(arr) {
+  if (!getAppId()) return;
+  localStorage.setItem(storageKey(), JSON.stringify(arr));
+  document.getElementById('deviceCount').textContent = arr.length + ' device' + (arr.length !== 1 ? 's' : '');
+}
+
+// ── Tab switch ──
+function showTab(t) {
+  ['send','tokens','add'].forEach(id => {
+    const cap = id.charAt(0).toUpperCase() + id.slice(1);
+    document.getElementById('panel' + cap).style.display = t === id ? 'block' : 'none';
+    document.getElementById('tab'   + cap).classList.toggle('active', t === id);
+  });
+  if (t === 'tokens') renderManageList();
+  if (t === 'send')   renderSendList();
+}
+
+// ── Server status ──
+async function checkServer() {
+  const dot = document.getElementById('statusDot');
+  const txt = document.getElementById('statusTxt');
+  dot.className = 'status-dot';
+  txt.innerHTML = 'Checking...';
+  try {
+    const r = await fetch(SERVER + '/', { signal: AbortSignal.timeout(6000) });
+    if (r.ok) {
+      dot.className = 'status-dot online';
+      txt.innerHTML = '<strong>Server Online</strong> — Push server ready';
+    } else throw new Error('Non-200');
+  } catch {
+    dot.className = 'status-dot offline';
+    txt.innerHTML = '<strong style="color:var(--danger)">Server Offline</strong> — Push server unreachable';
+  }
+}
+
+// ── Log ──
+function log(msg, type = '') {
+  const area = document.getElementById('logArea');
+  const ts   = new Date().toTimeString().slice(0,8);
+  const cls  = type === 'ok' ? 'log-ok' : type === 'err' ? 'log-err' : 'log-info';
+  const el   = document.createElement('div');
+  el.className = 'log-line';
+  el.innerHTML = `<span class="log-ts">${ts}</span><span class="${cls}">${escHtml(msg)}</span>`;
+  const placeholder = area.querySelector('span[style]');
+  if (placeholder) area.innerHTML = '';
+  area.appendChild(el);
+  area.scrollTop = area.scrollHeight;
+}
+function clearLog() {
+  document.getElementById('logArea').innerHTML = '<span style="color:#3d444d">— cleared —</span>';
+}
+
+// ── Render send list ──
+function renderSendList() {
+  const list   = document.getElementById('sendTokenList');
+  const tokens = getTokens();
+  if (!tokens.length) {
+    list.innerHTML = '<div class="empty"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="2" width="14" height="20" rx="2"/></svg>No devices yet. Load tokens or add manually.</div>';
+    updateSelectedCount();
+    return;
+  }
+  list.innerHTML = tokens.map((t, i) => `
+    <div class="token-item">
+      <input type="checkbox" class="token-check" data-idx="${i}" onchange="updateSelectedCount()" style="accent-color:var(--primary)"/>
+      <div class="token-info">
+        <div class="token-label">${escHtml(t.label || 'Device ' + (i+1))}</div>
+        <div class="token-val">${escHtml(t.token)}</div>
+      </div>
+    </div>
+  `).join('');
+  updateSelectedCount();
+}
+
+// ── Render manage list ──
+function renderManageList() {
+  const list   = document.getElementById('manageTokenList');
+  const tokens = getTokens();
+  document.getElementById('deviceCount').textContent = tokens.length + ' device' + (tokens.length !== 1 ? 's' : '');
+  if (!tokens.length) {
+    list.innerHTML = '<div class="empty">No devices saved yet.</div>';
+    return;
+  }
+  list.innerHTML = tokens.map((t, i) => `
+    <div class="token-item">
+      <div class="token-info">
+        <div class="token-label">${escHtml(t.label || 'Device ' + (i+1))}</div>
+        <div class="token-val">${escHtml(t.token)}</div>
+        <div class="token-time">${t.addedAt ? new Date(t.addedAt).toLocaleString() : ''}</div>
+      </div>
+      <button class="token-del" onclick="deleteToken(${i})" title="Delete">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+      </button>
+    </div>
+  `).join('');
+}
+
+// ── Select all ──
+function toggleSelectAll(cb) {
+  document.querySelectorAll('.token-check').forEach(c => c.checked = cb.checked);
+  updateSelectedCount();
+}
+function updateSelectedCount() {
+  const checks  = document.querySelectorAll('.token-check');
+  const checked = document.querySelectorAll('.token-check:checked').length;
+  document.getElementById('selectedCount').textContent = checked + ' selected';
+  const all = document.getElementById('selectAll');
+  if (all) all.checked = checks.length > 0 && checked === checks.length;
+}
+
+// ── Add token manually ──
+function addToken() {
+  const label = document.getElementById('newLabel').value.trim();
+  const token = document.getElementById('newToken').value.trim();
+  if (!token) { alert('FCM Token দিতে হবে'); return; }
+  if (!getAppId()) { alert('Please enter an App ID first'); return; }
+  const tokens = getTokens();
+  // Duplicate check
+  if (tokens.some(t => t.token === token)) {
+    alert('This token already exists'); return;
+  }
+  tokens.push({ label: label || 'Device ' + (tokens.length + 1), token, addedAt: Date.now() });
+  saveTokensLocal(tokens);
+  document.getElementById('newLabel').value = '';
+  document.getElementById('newToken').value = '';
+  renderSendList();
+  showTab('tokens');
+  log(`Device added: ${label || 'Device'}`, 'ok');
+}
+
+// ── Delete single token ──
+function deleteToken(i) {
+  if (!confirm('এই device সরিয়ে দেবো?')) return;
+  const tokens = getTokens();
+  tokens.splice(i, 1);
+  saveTokensLocal(tokens);
+  renderManageList();
+  renderSendList();
+}
+
+// ── Clear all ──
+function clearAllTokens() {
+  if (!confirm('সব device মুছে দেবো?')) return;
+  saveTokensLocal([]);
+  renderManageList();
+  renderSendList();
+}
+
+// ── Send notifications ──
+async function sendNotifications() {
+  const title    = document.getElementById('notifTitle').value.trim();
+  const body     = document.getElementById('notifBody').value.trim();
+  const imageUrl = currentImageUrl || '';
+  if (!title || !body) { alert('Title এবং Message দিতে হবে'); return; }
+
+  const selected = [...document.querySelectorAll('.token-check:checked')];
+  if (!selected.length) { alert('Please select at least one device'); return; }
+
+  const tokens  = getTokens();
+  const targets = selected.map(c => tokens[parseInt(c.dataset.idx)]).filter(Boolean);
+
+  // UI loading
+  const sendBtn     = document.getElementById('sendBtn');
+  const sendTxt     = document.getElementById('sendTxt');
+  const sendSpinner = document.getElementById('sendSpinner');
+  const progressBar = document.getElementById('progressBar');
+  const progressFill= document.getElementById('progressFill');
+
+  sendBtn.disabled       = true;
+  sendTxt.style.display  = 'none';
+  sendSpinner.style.display = 'flex';
+  progressBar.style.display = 'block';
+  progressFill.style.width  = '0%';
+
+  log(`Sending to ${targets.length} device(s)...`, 'info');
+
+  let ok = 0, fail = 0;
+  for (let idx = 0; idx < targets.length; idx++) {
+    const t = targets[idx];
+    progressFill.style.width = Math.round(((idx + 1) / targets.length) * 100) + '%';
+    try {
+      const payload = { token: t.token, title, body, password: currentPassword, appId: currentAppId };
+      if (imageUrl) payload.imageUrl = imageUrl;
+
+      const res  = await fetch(SERVER + '/send-notification', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(payload),
+        signal:  AbortSignal.timeout(15000)
+      });
+      const data = await res.json();
+      if (data.success) {
+        log(`✓ Sent to "${t.label || 'Device'}"`, 'ok');
+        ok++;
+      } else {
+        log(`✗ Failed "${t.label || 'Device'}": ${data.error || 'Unknown'}`, 'err');
+        fail++;
+      }
+    } catch (e) {
+      log(`✗ Error "${t.label || 'Device'}": ${e.message}`, 'err');
+      fail++;
+    }
+  }
+
+  log(`━━ Done: ${ok} sent, ${fail} failed ━━`, ok > 0 && fail === 0 ? 'ok' : 'info');
+  sendBtn.disabled       = false;
+  sendTxt.style.display  = 'inline';
+  sendSpinner.style.display = 'none';
+  progressFill.style.width  = '100%';
+  setTimeout(() => { progressBar.style.display = 'none'; }, 1500);
+}
+
+// Image mode
+let currentImageUrl = '';
+
+function setImageMode(mode) {
+  document.getElementById('modeUpload').style.display = mode === 'upload' ? 'block' : 'none';
+  document.getElementById('modeUrl').style.display    = mode === 'url'    ? 'block' : 'none';
+  document.getElementById('btnModeUpload').style.background   = mode === 'upload' ? 'var(--primary)' : 'transparent';
+  document.getElementById('btnModeUpload').style.color        = mode === 'upload' ? '#fff' : 'var(--text-muted)';
+  document.getElementById('btnModeUpload').style.borderColor  = mode === 'upload' ? 'var(--primary)' : 'var(--border)';
+  document.getElementById('btnModeUrl').style.background      = mode === 'url' ? 'var(--primary)' : 'transparent';
+  document.getElementById('btnModeUrl').style.color           = mode === 'url' ? '#fff' : 'var(--text-muted)';
+  document.getElementById('btnModeUrl').style.borderColor     = mode === 'url' ? 'var(--primary)' : 'var(--border)';
+  if (mode !== 'upload') clearImage();
+}
+
+function onUrlInput(url) {
+  currentImageUrl = url;
+  showPreview(url);
+}
+
+function showPreview(url) {
+  const wrap = document.getElementById('imgPreviewWrap');
+  const img  = document.getElementById('imgPreview');
+  if (url) {
+    img.src     = url;
+    img.onerror = () => { wrap.style.display = 'none'; };
+    img.onload  = () => { wrap.style.display = 'block'; };
+  } else {
+    wrap.style.display = 'none';
+    img.src = '';
+  }
+}
+
+function clearImage() {
+  currentImageUrl = '';
+  showPreview('');
+  const urlInput = document.getElementById('notifImageUrl');
+  if (urlInput) urlInput.value = '';
+  const status = document.getElementById('uploadStatus');
+  if (status) { status.style.display = 'none'; status.textContent = ''; }
+  const drop = document.getElementById('dropZone');
+  if (drop) drop.innerHTML = `<div style="font-size:1.8rem;margin-bottom:6px">🖼️</div><div style="font-size:.78rem;color:var(--text-muted)">Tap to select image</div><div style="font-size:.65rem;color:var(--text-light);margin-top:3px">JPG, PNG, GIF, WEBP</div>`;
+  const fileInput = document.getElementById('imgFile');
+  if (fileInput) fileInput.value = '';
+}
+
+async function onFileSelected(input) {
+  const file = input.files[0];
+  if (!file) return;
+
+  const status = document.getElementById('uploadStatus');
+  const drop   = document.getElementById('dropZone');
+
+  // Preview locally first
+  const localUrl = URL.createObjectURL(file);
+  showPreview(localUrl);
+
+  // Upload to ImgBB
+  status.style.display  = 'block';
+  status.style.color    = 'var(--text-muted)';
+  status.textContent    = '⏳ Uploading image...';
+  drop.style.opacity    = '.5';
+
+  try {
+    const formData = new FormData();
+    formData.append('image', file);
+    // ImgBB free API key — replace করতে পারো নিজের key দিয়ে
+    const res  = await fetch('https://api.imgbb.com/1/upload?key=ef261c22cbc48d06bf468c7a20e05d78', {
+      method: 'POST',
+      body:   formData
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      currentImageUrl = data.data.url;
+      showPreview(currentImageUrl);
+      status.style.color   = '#22c55e';
+      status.textContent   = '✓ Uploaded! Ready to send.';
+      drop.style.opacity   = '1';
+      log('Image uploaded: ' + currentImageUrl, 'ok');
+    } else {
+      throw new Error(data.error?.message || 'Upload failed');
+    }
+  } catch (e) {
+    // Upload fail হলে alternative — Cloudinary anonymous upload try করো
+    try {
+      const formData2 = new FormData();
+      formData2.append('file',         file);
+      formData2.append('upload_preset', 'ml_default');
+      const res2  = await fetch('https://api.cloudinary.com/v1_1/demo/image/upload', {
+        method: 'POST',
+        body:   formData2
+      });
+      const data2 = await res2.json();
+      if (data2.secure_url) {
+        currentImageUrl = data2.secure_url;
+        showPreview(currentImageUrl);
+        status.style.color = '#22c55e';
+        status.textContent = '✓ Uploaded! Ready to send.';
+        drop.style.opacity = '1';
+        log('Image uploaded: ' + currentImageUrl, 'ok');
+        return;
+      }
+    } catch(_) {}
+
+    status.style.color = 'var(--danger)';
+    status.textContent = '✗ Upload failed. Try image URL instead.';
+    drop.style.opacity = '1';
+    log('Image upload error: ' + e.message, 'err');
+  }
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+
+// ── Password visibility toggle ──
+function togglePwdVisibility() {
+  const inp = document.getElementById('appPasswordInput');
+  const icon = document.getElementById('eyeIcon');
+  if (inp.type === 'password') {
+    inp.type = 'text';
+    icon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';
+  } else {
+    inp.type = 'password';
+    icon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+  }
+}
+
+// ── Auth state ──
+let isAuthenticated = false;
+let currentPassword = '';
+
+function showAuthStatus(msg, type) {
+  const el = document.getElementById('authStatus');
+  el.style.display = 'block';
+  el.style.background = type === 'ok' ? '#22c55e18' : '#ef444418';
+  el.style.border = '1.5px solid ' + (type === 'ok' ? '#22c55e44' : '#ef444444');
+  el.style.color = type === 'ok' ? '#22c55e' : 'var(--danger)';
+  el.textContent = msg;
+}
+
+function showMainContent(appId) {
+  isAuthenticated = true;
+  document.getElementById('authCard').style.display = 'none';
+  const badge = document.getElementById('authBadge');
+  badge.style.display = 'flex';
+  document.getElementById('authBadgeApp').textContent = appId;
+  document.getElementById('mainContent').style.display = 'block';
+}
+
+function logoutAuth() {
+  isAuthenticated = false;
+  currentPassword = '';
+  document.getElementById('authCard').style.display = 'block';
+  document.getElementById('authBadge').style.display = 'none';
+  document.getElementById('mainContent').style.display = 'none';
+  document.getElementById('authStatus').style.display = 'none';
+  document.getElementById('appPasswordInput').value = '';
+}
+</script>
+</body>
+</html>
