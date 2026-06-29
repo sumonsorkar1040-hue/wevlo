@@ -1,0 +1,17 @@
+name = "wevlo"
+compatibility_date = "2024-01-01"
+
+# ── Cloudflare Pages Configuration ──
+# Deploy করার জন্য:
+# 1. npm install -g wrangler
+# 2. wrangler login
+# 3. wrangler pages deploy . --project-name=wevlo
+
+[site]
+bucket = "."
+
+# ── Environment Variables (optional) ──
+# Cloudflare Dashboard থেকে set করো:
+# GAS_URL          = your Google Apps Script URL
+# API_KEY          = your secret key
+# BUILDER_API_URL  = your builder worker URL

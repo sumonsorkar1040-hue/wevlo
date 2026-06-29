@@ -1,0 +1,37 @@
+# Cloudflare Pages — Clean URL Redirects (.html hidden)
+
+# ── Admin Panel ──
+/admin          /admin/index.html   200
+/admin/         /admin/index.html   200
+
+# ── If someone types /pages/build.html → redirect to clean URL ──
+/pages/build.html           /build          301
+/pages/editor.html          /editor         301
+/pages/lab.html             /lab            301
+/pages/login.html           /login          301
+/pages/preview.html         /preview        301
+/pages/profile.html         /profile        301
+/pages/projects.html        /projects       301
+/pages/push_dashboard.html  /push           301
+/pages/subscription.html    /subscription   301
+/pages/templates.html       /templates      301
+/pages/wallet.html          /wallet         301
+
+# ── Clean URLs → actual HTML files (hidden .html) ──
+/build          /pages/build.html           200
+/editor         /pages/editor.html          200
+/lab            /pages/lab.html             200
+/login          /pages/login.html           200
+/preview        /pages/preview.html         200
+/profile        /pages/profile.html         200
+/projects       /pages/projects.html        200
+/push           /pages/push_dashboard.html  200
+/subscription   /pages/subscription.html    200
+/templates      /pages/templates.html       200
+/wallet         /pages/wallet.html          200
+
+# ── Root ──
+/               /index.html                 200
+
+# ── Fallback ──
+/*              /index.html                 200
