@@ -1,0 +1,1072 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Wevlo — Build APK</title>
+<link rel="stylesheet" href="../css/style.css"/>
+<style>
+/* ── Remove top gap on build page ── */
+.main-content { padding-top: 0 !important; }
+.page-header { margin-bottom: 14px; }
+.layout { padding-top: 1px !important; }
+@media (max-width: 640px) {
+  .main-content { padding-top: 0 !important; }
+  .layout { padding-top: 1px !important; }
+}
+
+/* ── Tabs ── */
+.build-tabs {
+  display: flex; gap: 6px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 14px; padding: 5px;
+  margin-bottom: 18px;
+}
+.build-tab {
+  flex: 1; padding: 10px 12px;
+  border: none; border-radius: 10px;
+  background: transparent; cursor: pointer;
+  font-family: var(--font); font-size: .82rem; font-weight: 700;
+  color: var(--text-muted); transition: all .18s;
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+}
+.build-tab.active {
+  background: var(--surface); color: var(--primary);
+  box-shadow: 0 1px 4px rgba(0,0,0,.08);
+}
+
+/* ── Panel ── */
+.build-panel { display: none; }
+.build-panel.show { display: block; }
+
+/* ── Two-col layout (desktop) ── */
+.build-cols {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 20px; align-items: start;
+}
+@media (max-width: 860px) {
+  .build-cols { grid-template-columns: 1fr; }
+}
+
+/* ── Section card ── */
+.bc {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 14px;
+}
+.bc-head {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 18px; border-bottom: 1px solid var(--border);
+  background: var(--surface2); font-size: .875rem; font-weight: 700;
+}
+.bc-num {
+  width: 24px; height: 24px; border-radius: 50%;
+  background: var(--primary); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .72rem; font-weight: 800; flex-shrink: 0;
+}
+.bc-body { padding: 18px; }
+
+/* ── Build CTA ── */
+.build-cta {
+  width: 100%; padding: 15px;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  border: none; border-radius: var(--radius-lg);
+  color: #fff; font-size: .95rem; font-weight: 800;
+  font-family: var(--font); cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  transition: all .2s; margin-bottom: 14px;
+}
+.build-cta:hover:not(:disabled) { transform: translateY(-2px); box-shadow: var(--shadow-blue); }
+.build-cta:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+/* ── Upload zones ── */
+.upload-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 480px) { .upload-row { grid-template-columns: 1fr; } }
+.upload-zone {
+  border: 2px dashed var(--border); border-radius: var(--radius-lg);
+  padding: 20px 12px; text-align: center;
+  cursor: pointer; transition: all .18s; position: relative; overflow: hidden;
+}
+.upload-zone:hover, .upload-zone.drag { border-color: var(--primary); background: var(--primary-50); }
+.upload-zone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; z-index: 2; }
+.upload-preview { width: 64px; height: 64px; object-fit: cover; border-radius: 12px; margin: 0 auto 8px; display: none; }
+.upload-icon { width: 44px; height: 44px; background: var(--surface2); border-radius: var(--radius); display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; color: var(--text-light); }
+.upload-lbl { font-size: .78rem; font-weight: 700; color: var(--text-muted); }
+.upload-sub { font-size: .68rem; color: var(--text-light); margin-top: 2px; }
+
+/* ── ZIP Upload ── */
+.zip-zone {
+  border: 2px dashed var(--border); border-radius: var(--radius-lg);
+  padding: 32px 18px; text-align: center;
+  cursor: pointer; transition: all .18s; position: relative; overflow: hidden;
+}
+.zip-zone:hover, .zip-zone.drag { border-color: var(--primary); background: var(--primary-50); }
+.zip-zone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; z-index: 2; }
+.zip-info {
+  display: none; align-items: center; gap: 10px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 11px 14px; margin-top: 10px;
+}
+.zip-info.show { display: flex; }
+
+/* ── Toggles ── */
+.toggles-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.encryption-wrap {
+  grid-column: 1/-1;
+  background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+  border: 1.5px solid #bae6fd; border-radius: var(--radius); padding: 14px 16px;
+}
+.encryption-wrap.active-enc {
+  background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+  border-color: #86efac;
+}
+@media (max-width: 480px) { .toggles-grid { grid-template-columns: 1fr; } }
+
+/* ── Color picker ── */
+.color-row { display: flex; align-items: center; gap: 10px; }
+.color-row input[type="color"] { width: 42px; height: 38px; border: 1.5px solid var(--border); border-radius: var(--radius); padding: 3px; cursor: pointer; background: none; flex-shrink: 0; }
+.color-row input[type="text"] { flex: 1; }
+
+/* ── Preview card ── */
+.prev-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 18px; text-align: center; margin-bottom: 14px;
+}
+.prev-icon {
+  width: 80px; height: 80px;
+  background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+  border-radius: 18px; margin: 0 auto 10px;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden; color: var(--primary-light); border: 2px solid var(--border);
+}
+.prev-icon img { width: 100%; height: 100%; object-fit: cover; }
+.prev-name { font-size: .95rem; font-weight: 700; margin-bottom: 2px; }
+.prev-pkg  { font-size: .7rem; color: var(--text-muted); font-family: var(--font-mono); }
+.prev-meta { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); display: flex; gap: 12px; justify-content: center; }
+.prev-meta-i { font-size: .7rem; color: var(--text-muted); }
+.prev-meta-i strong { display: block; color: var(--text); font-size: .82rem; font-weight: 700; }
+
+/* ── Terminal ── */
+.term-card {
+  background: #0d1117; border: 1px solid #30363d;
+  border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 14px;
+  display: none;
+}
+.term-card.show { display: block; }
+.term-head {
+  background: #161b22; border-bottom: 1px solid #30363d;
+  padding: 9px 13px; display: flex; align-items: center; gap: 6px;
+}
+.term-dot { width: 11px; height: 11px; border-radius: 50%; }
+.term-title { font-size: .72rem; color: #8b949e; font-family: monospace; flex: 1; margin-left: 4px; }
+.term-status { font-size: .68rem; font-family: monospace; padding: 2px 7px; border-radius: 4px; }
+.term-status.run  { background: #1f6feb33; color: #58a6ff; }
+.term-status.done { background: #2ea04333; color: #3fb950; }
+.term-status.fail { background: #da363333; color: #f85149; }
+.term-body {
+  padding: 12px 14px; font-family: 'Fira Mono',monospace; font-size: .7rem;
+  line-height: 1.7; color: #c9d1d9; max-height: 380px; overflow-y: auto;
+}
+.log-line { display: flex; gap: 8px; margin-bottom: 1px; }
+.log-ts  { color: #3d444d; flex-shrink: 0; user-select: none; }
+.log-txt { color: #c9d1d9; word-break: break-all; }
+.log-txt.err  { color: #f85149; }
+.log-txt.warn { color: #d29922; }
+.log-txt.ok   { color: #3fb950; }
+.log-txt.info { color: #58a6ff; }
+.log-cursor { display: inline-block; width: 7px; height: 13px; background: #58a6ff; margin-left: 2px; animation: blink 1s step-end infinite; vertical-align: middle; }
+
+/* ── Result card ── */
+.res-card { border-radius: var(--radius-lg); padding: 18px; display: none; margin-bottom: 14px; }
+.res-card.show { display: block; }
+.res-card.ok  { background: #f0fdf4; border: 1.5px solid #86efac; }
+.res-card.err { background: #fef2f2; border: 1.5px solid #fca5a5; }
+.res-icon { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; }
+.res-card.ok .res-icon  { background: #d1fae5; color: var(--success); }
+.res-card.err .res-icon { background: #fee2e2; color: var(--danger); }
+.res-title { font-size: .95rem; font-weight: 700; margin-bottom: 4px; }
+.res-sub   { font-size: .8rem; color: var(--text-muted); margin-bottom: 12px; }
+.apk-meta { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 12px; margin-bottom: 12px; }
+.apk-meta-row { display: flex; justify-content: space-between; font-size: .78rem; margin-bottom: 4px; }
+.apk-meta-row span:first-child { color: var(--text-muted); }
+.apk-meta-row span:last-child  { font-weight: 600; }
+
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+</style>
+</head>
+<body>
+<div class="layout">
+  <main class="main-content fade-in">
+
+    <div class="page-header">
+      <div class="page-header-text">
+        <h1>
+          <span style="display:inline-flex;align-items:center;gap:10px">
+            <span style="display:inline-flex;width:34px;height:34px;background:linear-gradient(135deg,#2563eb,#0891b2);border-radius:9px;align-items:center;justify-content:center">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            </span>
+            Build APK
+          </span>
+        </h1>
+        <p>Convert your project to an Android APK</p>
+      </div>
+    </div>
+
+    <!-- ── Tabs ── -->
+    <div class="build-tabs">
+      <button class="build-tab active" id="tabWeb" onclick="showTab('web')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        HTML / CSS / JS
+      </button>
+      <button class="build-tab" id="tabNative" onclick="showTab('native')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+        Kotlin / Java
+      </button>
+    </div>
+
+    <!-- ══════════════ WEB PANEL ══════════════ -->
+    <div class="build-panel show" id="panelWeb">
+      <div class="build-cols">
+        <div>
+          <div class="bc">
+            <div class="bc-head"><div class="bc-num">1</div>App Information</div>
+            <div class="bc-body">
+              <div class="grid-2">
+                <div class="form-group">
+                  <label class="form-label">App Name *</label>
+                  <input class="form-input" id="appName" placeholder="My App" oninput="updatePreview()"/>
+                  <div class="form-error" id="appNameErr">Required</div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Package Name *</label>
+                  <input class="form-input" id="packageName" placeholder="com.myapp.name" oninput="autoFormatPackage(this);updatePreview()"/>
+                  <div class="form-hint">Lowercase, dot-separated</div>
+                  <div class="form-error" id="pkgErr">Invalid format</div>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">App Source</label>
+                <div style="display:flex;gap:8px;margin-bottom:8px">
+                  <button type="button" id="btnOnline" onclick="setMode('online')"
+                    style="flex:1;padding:9px;border-radius:8px;border:2px solid var(--primary);background:var(--primary);color:#fff;font-weight:700;font-size:.8rem;cursor:pointer;font-family:var(--font)">🌐 Website URL</button>
+                  <button type="button" id="btnOffline" onclick="setMode('offline')"
+                    style="flex:1;padding:9px;border-radius:8px;border:2px solid var(--border);background:transparent;color:var(--text-muted);font-weight:700;font-size:.8rem;cursor:pointer;font-family:var(--font)">📁 My Projects</button>
+                </div>
+              </div>
+              <div class="form-group" id="grpOnline">
+                <label class="form-label">Website URL *</label>
+                <input class="form-input" id="homePage" type="url" placeholder="https://mywebsite.com"/>
+                <div class="form-error" id="urlErr">Valid URL required</div>
+              </div>
+              <div class="form-group" id="grpOffline" style="display:none">
+                <label class="form-label">Select Project *</label>
+                <select class="form-input" id="projectPicker" onchange="onPickProject(this.value)">
+                  <option value="">-- Select a project --</option>
+                </select>
+                <div class="form-hint" id="offlineStatus" style="display:none"></div>
+                <div class="form-error" id="projErr">Please select a project</div>
+              </div>
+              <div class="grid-2">
+                <div class="form-group">
+                  <label class="form-label">Version Name</label>
+                  <input class="form-input" id="versionName" value="1.0" oninput="updatePreview()"/>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Version Code</label>
+                  <input class="form-input" id="versionCode" type="number" value="1" min="1"/>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Status Bar Color</label>
+                <div class="color-row">
+                  <input type="color" id="colorPicker" value="#2563eb" oninput="document.getElementById('colorText').value=this.value"/>
+                  <input type="text" class="form-input" id="colorText" value="#2563eb" maxlength="7" oninput="if(/^#[0-9a-fA-F]{6}$/.test(this.value))document.getElementById('colorPicker').value=this.value"/>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bc">
+            <div class="bc-head"><div class="bc-num">2</div>App Icons</div>
+            <div class="bc-body">
+              <div class="upload-row">
+                <div>
+                  <p class="form-label" style="margin-bottom:6px">App Icon</p>
+                  <div class="upload-zone" id="iconZone"
+                       ondragover="event.preventDefault();this.classList.add('drag')"
+                       ondragleave="this.classList.remove('drag')"
+                       ondrop="handleDrop(event,'iconFile','iconPreview','iconZone','prevIcon')">
+                    <input type="file" id="iconFile" accept="image/*" onchange="handleUpload(this,'iconPreview','iconZone','prevIcon')"/>
+                    <img class="upload-preview" id="iconPreview"/>
+                    <div class="upload-icon" id="iconZoneIcon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg></div>
+                    <div class="upload-lbl">App Icon</div>
+                    <div class="upload-sub">512×512 PNG</div>
+                  </div>
+                </div>
+                <div>
+                  <p class="form-label" style="margin-bottom:6px">Splash Screen</p>
+                  <div class="upload-zone" id="splashZone"
+                       ondragover="event.preventDefault();this.classList.add('drag')"
+                       ondragleave="this.classList.remove('drag')"
+                       ondrop="handleDrop(event,'splashFile','splashPreview','splashZone',null)">
+                    <input type="file" id="splashFile" accept="image/*" onchange="handleUpload(this,'splashPreview','splashZone',null)"/>
+                    <img class="upload-preview" id="splashPreview"/>
+                    <div class="upload-icon" id="splashZoneIcon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>
+                    <div class="upload-lbl">Splash Screen</div>
+                    <div class="upload-sub">1080px+</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bc">
+            <div class="bc-head"><div class="bc-num">3</div>App Settings</div>
+            <div class="bc-body">
+              <div class="toggles-grid">
+                <div class="toggle-wrap on" id="tw_hideTitle" onclick="toggleSetting('hideTitle',this)"><div><div class="toggle-label">Hide Title Bar</div><div class="toggle-sub">Hides the toolbar</div></div><div class="toggle-switch"></div></div>
+                <div class="toggle-wrap" id="tw_showLoading" onclick="toggleSetting('showLoading',this)"><div><div class="toggle-label">Loading Spinner</div><div class="toggle-sub">Page load spinner</div></div><div class="toggle-switch"></div></div>
+                <div class="toggle-wrap" id="tw_fullscreen" onclick="toggleSetting('fullscreen',this)"><div><div class="toggle-label">Fullscreen</div><div class="toggle-sub">Hides the status bar</div></div><div class="toggle-switch"></div></div>
+                <div class="toggle-wrap" id="tw_swipeRefresh" onclick="toggleSetting('swipeRefresh',this)"><div><div class="toggle-label">Pull to Refresh</div><div class="toggle-sub">Pull down to refresh</div></div><div class="toggle-switch"></div></div>
+                <div class="toggle-wrap" id="tw_allowZoom" onclick="toggleSetting('allowZoom',this)"><div><div class="toggle-label">Pinch Zoom</div><div class="toggle-sub">Pinch with two fingers to zoom</div></div><div class="toggle-switch"></div></div>
+                <div class="toggle-wrap" id="tw_mediaAutoplay" onclick="toggleSetting('mediaAutoplay',this)"><div><div class="toggle-label">Media Autoplay</div><div class="toggle-sub">Auto play video</div></div><div class="toggle-switch"></div></div>
+                <div class="toggle-wrap" id="tw_allowCamera" onclick="toggleSetting('allowCamera',this)"><div><div class="toggle-label">Camera Access</div><div class="toggle-sub">Camera permission</div></div><div class="toggle-switch"></div></div>
+                <div class="toggle-wrap" id="tw_allowMic" onclick="toggleSetting('allowMic',this)"><div><div class="toggle-label">Microphone</div><div class="toggle-sub">Mic permission</div></div><div class="toggle-switch"></div></div>
+                <div class="toggle-wrap" id="tw_pcMode" onclick="toggleSetting('pcMode',this)"><div><div class="toggle-label">PC Mode</div><div class="toggle-sub">Desktop user-agent</div></div><div class="toggle-switch"></div></div>
+                <div class="toggle-wrap" id="tw_allowLongPress" onclick="toggleSetting('allowLongPress',this)"><div><div class="toggle-label">Long Press Menu</div><div class="toggle-sub">Context menu</div></div><div class="toggle-switch"></div></div>
+
+                <!-- Encryption -->
+                <div class="encryption-wrap" id="encryptionWrap">
+                  <div class="toggle-wrap" id="tw_useEncryption"
+                       style="border:none;padding:0;background:none"
+                       onclick="handleEncryptionToggle(this)">
+                    <div style="display:flex;align-items:center;gap:8px">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                      <div>
+                        <div class="toggle-label">AES-256 Asset Encryption</div>
+                        <div class="toggle-sub" id="encSubtitle">Requires subscription plan</div>
+                      </div>
+                    </div>
+                    <div class="toggle-switch"></div>
+                  </div>
+                </div>
+
+                <!-- Push Notification -->
+                <div class="encryption-wrap" id="pushNotifWrap" style="background:linear-gradient(135deg,#faf5ff,#ede9fe);border-color:#c4b5fd;grid-column:1/-1">
+                  <div class="toggle-wrap" id="tw_pushNotification"
+                       style="border:none;padding:0;background:none"
+                       onclick="handlePushNotifToggle(this)">
+                    <div style="display:flex;align-items:center;gap:8px">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                      <div>
+                        <div class="toggle-label">Push Notifications (FCM)</div>
+                        <div class="toggle-sub" id="pushSubtitle">Send notifications to users</div>
+                      </div>
+                    </div>
+                    <div class="toggle-switch"></div>
+                  </div>
+                  <!-- Push Notification config fields — shown when toggled -->
+                  <div id="pushNotifFields" style="display:none;margin-top:14px">
+                    <input type="hidden" id="pushServerUrl" value="https://dinalamin-din-push-server.hf.space/"/>
+
+                    <!-- Firebase Config — hardcoded, hidden -->
+                    <input type="hidden" id="fcmProjectId"     value="din-push-server"/>
+                    <input type="hidden" id="fcmAppId"         value="1:469250442836:android:ad3c5c8a71b82b609d4fc1"/>
+                    <input type="hidden" id="fcmApiKey"        value="AIzaSyDmiudTXdp9ElxuIO47yGZjb_qH_IsxRQc"/>
+                    <input type="hidden" id="fcmSenderId"      value="469250442836"/>
+                    <input type="hidden" id="fcmStorageBucket" value="din-push-server.firebasestorage.app"/>
+
+                    <div class="form-group" style="margin-bottom:0">
+                      <label class="form-label" style="font-size:.75rem">🔒 Push Notification Password</label>
+                      <div style="position:relative">
+                        <input class="form-input" id="pushPassword" placeholder="Enter a password (min. 6 chars)" type="password"
+                               style="font-size:.8rem;padding-right:42px"/>
+                        <button type="button" onclick="togglePushPwd()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#7c3aed;padding:4px">
+                          <svg id="pushPwdEye" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        </button>
+                      </div>
+                      <div class="form-hint" style="font-size:.68rem;color:#7c3aed;margin-top:4px">⚠️ Remember this password — you'll need it to login to the Push Dashboard</div>
+                    </div>
+                    <div style="margin-top:10px;padding:8px 10px;background:rgba(139,92,246,.08);border-radius:8px;border:1px solid #c4b5fd">
+                      <div style="font-size:.7rem;color:#6d28d9;font-weight:700;margin-bottom:3px">📋 How does it work?</div>
+                      <div style="font-size:.68rem;color:#7c3aed;line-height:1.5">
+                        1. FCM config will be included in your APK<br/>
+                        2. When users open the app, their FCM token is sent to the server<br/>
+                        3. Login to Push Dashboard with <strong>App ID + Password</strong><br/>
+                        4. Then send notifications
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Web Sidebar -->
+        <div>
+          <div class="prev-card">
+            <div class="prev-icon" id="prevMockup">
+              <img id="prevIcon" src="" style="display:none"/>
+              <svg id="prevIconPh" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+            </div>
+            <div class="prev-name" id="prevName">My App</div>
+            <div class="prev-pkg"  id="prevPkg">com.myapp.name</div>
+            <div class="prev-meta">
+              <div class="prev-meta-i"><strong id="prevVer">1.0</strong>Version</div>
+              <div class="prev-meta-i"><strong>Android 5+</strong>Min SDK</div>
+              <div class="prev-meta-i"><strong id="apkSize">~20 MB</strong>Size</div>
+            </div>
+          </div>
+          <button class="build-cta" id="buildBtn" onclick="startWebBuild()">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" id="buildBtnIcon"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            <span id="buildBtnTxt">BUILD APK</span>
+            <div class="spinner" id="buildSpinner" style="display:none;width:18px;height:18px;border-width:2px;border-color:rgba(255,255,255,.3);border-top-color:#fff"></div>
+          </button>
+          <div class="term-card" id="webTerm">
+            <div class="term-head">
+              <div class="term-dot" style="background:#ff5f57"></div>
+              <div class="term-dot" style="background:#ffbd2e;margin-left:5px"></div>
+              <div class="term-dot" style="background:#28ca41;margin-left:5px"></div>
+              <span class="term-title">wevlo-builder — build output</span>
+              <span class="term-status run" id="webTermStatus">● RUNNING</span>
+              <button onclick="copyTermLog('webTermBody','webCopyBtn')" id="webCopyBtn" style="margin-left:8px;background:#21262d;border:1px solid #30363d;border-radius:5px;color:#8b949e;font-size:.68rem;font-family:monospace;padding:2px 8px;cursor:pointer;display:flex;align-items:center;gap:4px;transition:all .15s" onmouseover="this.style.color='#e6edf3'" onmouseout="this.style.color='#8b949e'"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy</button>
+            </div>
+            <div class="term-body" id="webTermBody"><span class="log-cursor" id="webCursor"></span></div>
+          </div>
+          <div class="res-card" id="webRes">
+            <div class="res-icon" id="webResIcon"></div>
+            <div class="res-title" id="webResTitle"></div>
+            <div class="res-sub" id="webResSub"></div>
+            <div class="apk-meta" id="webApkMeta" style="display:none">
+              <div class="apk-meta-row"><span>App Name</span><span id="webMetaName">—</span></div>
+              <div class="apk-meta-row"><span>Package</span><span id="webMetaPkg">—</span></div>
+              <div class="apk-meta-row"><span>Version</span><span id="webMetaVer">—</span></div>
+              <div class="apk-meta-row"><span>Signature</span><span style="color:var(--success)">✓ V1+V2</span></div>
+            </div>
+            <a class="btn btn-success btn-full" id="webDlBtn" style="display:none">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Download APK
+            </a>
+            <button class="btn btn-secondary btn-full mt-8" id="webAgainBtn" style="display:none" onclick="resetWebBuild()">Build Again</button>
+          </div>
+        </div>
+      </div>
+    </div><!-- /panelWeb -->
+
+    <!-- ══════════════ NATIVE PANEL ══════════════ -->
+    <div class="build-panel" id="panelNative">
+      <div class="build-cols">
+        <div>
+          <div class="bc">
+            <div class="bc-head"><div class="bc-num">1</div>App Information</div>
+            <div class="bc-body">
+              <div class="grid-2">
+                <div class="form-group">
+                  <label class="form-label">App Name *</label>
+                  <input class="form-input" id="nAppName" placeholder="My Native App" oninput="updateNativePreview()"/>
+                  <div class="form-error" id="nAppNameErr">Required</div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Package Name *</label>
+                  <input class="form-input" id="nPkgName" placeholder="com.myapp.main" oninput="autoFormatPackage(this);updateNativePreview()"/>
+                  <div class="form-error" id="nPkgErr">Invalid format</div>
+                </div>
+              </div>
+              <div class="grid-2">
+                <div class="form-group">
+                  <label class="form-label">Version Name</label>
+                  <input class="form-input" id="nVerName" value="1.0"/>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Version Code</label>
+                  <input class="form-input" id="nVerCode" type="number" value="1" min="1"/>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bc">
+            <div class="bc-head"><div class="bc-num">2</div>Upload ZIP (Kotlin / Java Project)</div>
+            <div class="bc-body">
+              <div class="zip-zone" id="zipZone"
+                   ondragover="event.preventDefault();this.classList.add('drag')"
+                   ondragleave="this.classList.remove('drag')"
+                   ondrop="handleZipDrop(event)">
+                <input type="file" id="nZipFile" accept=".zip" onchange="handleZipUpload(this)"/>
+                <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="var(--text-light)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto 10px;display:block"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                <div style="font-weight:700;margin-bottom:5px">Drop ZIP file here</div>
+                <div style="font-size:.78rem;color:var(--text-muted)">Android Studio project ZIP or click to browse<br/>.kt / .java / layout XML included</div>
+              </div>
+              <div class="zip-info" id="zipInfo">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                <div>
+                  <div style="font-weight:700;font-size:.85rem" id="zipName">file.zip</div>
+                  <div style="font-size:.72rem;color:var(--text-muted)" id="zipSize">0 KB</div>
+                </div>
+              </div>
+              <div class="form-error" id="nZipErr" style="margin-top:8px">ZIP file required</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Native Sidebar -->
+        <div>
+          <div class="prev-card">
+            <div class="prev-icon">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+            </div>
+            <div class="prev-name" id="nPrevName">Native App</div>
+            <div class="prev-pkg"  id="nPrevPkg">com.myapp.main</div>
+            <div class="prev-meta">
+              <div class="prev-meta-i"><strong id="nPrevVer">1.0</strong>Version</div>
+              <div class="prev-meta-i"><strong>Android 5+</strong>Min SDK</div>
+              <div class="prev-meta-i"><strong>Kotlin/Java</strong>Source</div>
+            </div>
+          </div>
+          <button class="build-cta" id="nBuildBtn" onclick="startNativeBuild()">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" id="nBuildIcon"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            <span id="nBuildTxt">BUILD APK</span>
+            <div class="spinner" id="nBuildSpinner" style="display:none;width:18px;height:18px;border-width:2px;border-color:rgba(255,255,255,.3);border-top-color:#fff"></div>
+          </button>
+          <div class="term-card" id="nTerm">
+            <div class="term-head">
+              <div class="term-dot" style="background:#ff5f57"></div>
+              <div class="term-dot" style="background:#ffbd2e;margin-left:5px"></div>
+              <div class="term-dot" style="background:#28ca41;margin-left:5px"></div>
+              <span class="term-title">wevlo-builder — gradle output</span>
+              <span class="term-status run" id="nTermStatus">● RUNNING</span>
+              <button onclick="copyTermLog('nTermBody','nCopyBtn')" id="nCopyBtn" style="margin-left:8px;background:#21262d;border:1px solid #30363d;border-radius:5px;color:#8b949e;font-size:.68rem;font-family:monospace;padding:2px 8px;cursor:pointer;display:flex;align-items:center;gap:4px;transition:all .15s" onmouseover="this.style.color='#e6edf3'" onmouseout="this.style.color='#8b949e'"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy</button>
+            </div>
+            <div class="term-body" id="nTermBody"><span class="log-cursor" id="nCursor"></span></div>
+          </div>
+          <div class="res-card" id="nRes">
+            <div class="res-icon" id="nResIcon"></div>
+            <div class="res-title" id="nResTitle"></div>
+            <div class="res-sub" id="nResSub"></div>
+            <a class="btn btn-success btn-full" id="nDlBtn" style="display:none">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Download APK
+            </a>
+            <button class="btn btn-secondary btn-full mt-8" id="nAgainBtn" style="display:none" onclick="resetNativeBuild()">Build Again</button>
+          </div>
+        </div>
+      </div>
+    </div><!-- /panelNative -->
+
+  </main>
+</div>
+<div id="mobileNavMount"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="../js/core.js"></script>
+<script>
+if (!requireAuth()) {}
+document.getElementById('mobileNavMount').innerHTML = buildMobileNav('build');
+
+// ── Tab switch ──
+function showTab(t) {
+  document.getElementById('panelWeb').classList.toggle('show', t === 'web');
+  document.getElementById('panelNative').classList.toggle('show', t === 'native');
+  document.getElementById('tabWeb').classList.toggle('active', t === 'web');
+  document.getElementById('tabNative').classList.toggle('active', t === 'native');
+}
+
+// ── Settings ──
+const settings = {
+  hideTitle:true, showLoading:false, fullscreen:false,
+  swipeRefresh:false, allowZoom:false, mediaAutoplay:false,
+  allowCamera:false, allowMic:false, pcMode:false, allowLongPress:false,
+  useEncryption: false,
+  pushNotification: false
+};
+function toggleSetting(k, el) { settings[k] = !settings[k]; el.classList.toggle('on', settings[k]); }
+
+function handleEncryptionToggle(el) {
+  if (!Session.getSubActive()) {
+    showToast('Encryption requires a subscription plan', 'warning');
+    setTimeout(() => Nav.subscribe(), 900);
+    return;
+  }
+  settings.useEncryption = !settings.useEncryption;
+  el.classList.toggle('on', settings.useEncryption);
+  document.getElementById('encSubtitle').textContent =
+    settings.useEncryption ? 'AES-256-GCM Active ✓' : 'Available — click to enable';
+  document.getElementById('encryptionWrap').classList.toggle('active-enc', settings.useEncryption);
+}
+if (Session.getSubActive()) {
+  document.getElementById('encSubtitle').textContent = 'Available — click to enable';
+}
+
+// Push Notification toggle
+function handlePushNotifToggle(el) {
+  settings.pushNotification = !settings.pushNotification;
+  el.classList.toggle('on', settings.pushNotification);
+  const fields = document.getElementById('pushNotifFields');
+  fields.style.display = settings.pushNotification ? 'block' : 'none';
+  document.getElementById('pushSubtitle').textContent =
+    settings.pushNotification ? 'FCM Active ✓' : 'Send notifications to users';
+  document.getElementById('pushNotifWrap').style.background =
+    settings.pushNotification
+      ? 'linear-gradient(135deg,#f0fdf4,#dcfce7)'
+      : 'linear-gradient(135deg,#faf5ff,#ede9fe)';
+  document.getElementById('pushNotifWrap').style.borderColor =
+    settings.pushNotification ? '#86efac' : '#c4b5fd';
+}
+function togglePushPwd() {
+  const inp = document.getElementById('pushPassword');
+  const eye = document.getElementById('pushPwdEye');
+  if (inp.type === 'password') {
+    inp.type = 'text';
+    eye.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';
+  } else {
+    inp.type = 'password';
+    eye.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+  }
+}
+function updatePushApkSize() {
+  // APK size increases slightly when push notification is enabled
+  const el = document.getElementById('apkSize');
+  if (el) el.textContent = settings.pushNotification ? '~22 MB' : '~20 MB';
+}
+function autoFormatPackage(el) { el.value = el.value.toLowerCase().replace(/[^a-z0-9.]/g,''); }
+
+// ── Image upload ──
+function handleUpload(input, previewId, zoneId, previewIconId) {
+  const file = input.files[0]; if (!file) return;
+  const r = new FileReader();
+  r.onload = e => {
+    const img = document.getElementById(previewId);
+    img.src = e.target.result; img.style.display = 'block';
+    document.getElementById(zoneId).querySelector('.upload-icon').style.display = 'none';
+    if (previewIconId) {
+      const pi = document.getElementById(previewIconId);
+      pi.src = e.target.result; pi.style.display = 'block';
+      const ph = document.getElementById('prevIconPh');
+      if (ph) ph.style.display = 'none';
+    }
+  };
+  r.readAsDataURL(file);
+}
+function handleDrop(e, inputId, previewId, zoneId, previewIconId) {
+  e.preventDefault();
+  document.getElementById(zoneId).classList.remove('drag');
+  const dt = new DataTransfer(); dt.items.add(e.dataTransfer.files[0]);
+  const input = document.getElementById(inputId); input.files = dt.files;
+  handleUpload(input, previewId, zoneId, previewIconId);
+}
+
+// ── Preview update ──
+function updatePreview() {
+  document.getElementById('prevName').textContent = document.getElementById('appName').value || 'My App';
+  document.getElementById('prevPkg').textContent  = document.getElementById('packageName').value || 'com.myapp.name';
+  document.getElementById('prevVer').textContent  = document.getElementById('versionName').value || '1.0';
+}
+function updateNativePreview() {
+  document.getElementById('nPrevName').textContent = document.getElementById('nAppName').value || 'Native App';
+  document.getElementById('nPrevPkg').textContent  = document.getElementById('nPkgName').value || 'com.myapp.main';
+  document.getElementById('nPrevVer').textContent  = document.getElementById('nVerName').value || '1.0';
+}
+
+// ── Source mode (web) ──
+let sourceMode = 'online', offlineProject = null;
+function setMode(m) {
+  sourceMode = m;
+  document.getElementById('grpOnline').style.display  = m === 'online' ? '' : 'none';
+  document.getElementById('grpOffline').style.display = m === 'offline' ? '' : 'none';
+  const on = document.getElementById('btnOnline'), off = document.getElementById('btnOffline');
+  if (m === 'online') {
+    on.style.cssText  = 'flex:1;padding:9px;border-radius:8px;border:2px solid var(--primary);background:var(--primary);color:#fff;font-weight:700;font-size:.8rem;cursor:pointer;font-family:var(--font)';
+    off.style.cssText = 'flex:1;padding:9px;border-radius:8px;border:2px solid var(--border);background:transparent;color:var(--text-muted);font-weight:700;font-size:.8rem;cursor:pointer;font-family:var(--font)';
+  } else {
+    off.style.cssText = 'flex:1;padding:9px;border-radius:8px;border:2px solid var(--primary);background:var(--primary);color:#fff;font-weight:700;font-size:.8rem;cursor:pointer;font-family:var(--font)';
+    on.style.cssText  = 'flex:1;padding:9px;border-radius:8px;border:2px solid var(--border);background:transparent;color:var(--text-muted);font-weight:700;font-size:.8rem;cursor:pointer;font-family:var(--font)';
+    populatePicker();
+  }
+}
+async function populatePicker(autoId) {
+  let projects = [];
+  try { projects = await WevloDB.getProjects(); } catch(e) {
+    try { projects = JSON.parse(localStorage.getItem('wevlo_projects')||'[]'); } catch(_) {}
+  }
+  const sel = document.getElementById('projectPicker');
+  sel.innerHTML = '<option value="">-- Select a Project --</option>';
+  projects.filter(p => p.type !== 'native').forEach(p => {
+    const o = document.createElement('option'); o.value = p.id;
+    o.textContent = p.name + (p.updatedAt ? ' ('+new Date(p.updatedAt).toLocaleDateString('bn-BD')+')' : '');
+    sel.appendChild(o);
+  });
+  if (autoId) { sel.value = autoId; onPickProject(autoId); }
+  else if (projects.filter(p=>p.type!=='native').length > 0) {
+    sel.value = projects.filter(p=>p.type!=='native')[0].id;
+    onPickProject(sel.value);
+  }
+}
+async function onPickProject(id) {
+  if (!id) { offlineProject = null; return; }
+  let projects = [];
+  try { projects = await WevloDB.getProjects(); } catch(e) {
+    try { projects = JSON.parse(localStorage.getItem('wevlo_projects')||'[]'); } catch(_) {}
+  }
+  const p = projects.find(x => x.id === id); if (!p) return;
+  offlineProject = p;
+  document.getElementById('appName').value = p.name; updatePreview();
+  const slug = p.name.toLowerCase().replace(/[^a-z0-9]/g,'').substring(0,10)||'app';
+  document.getElementById('packageName').value = 'com.'+slug+'.app';
+  autoFormatPackage(document.getElementById('packageName'));
+  const SUPP = ['.html','.css','.js','.json'];
+  const cnt = Object.keys(p.files||{}).filter(k=>SUPP.some(e=>k.endsWith(e))).length;
+  const st = document.getElementById('offlineStatus');
+  st.style.display = 'block';
+  st.style.color = cnt > 0 ? 'var(--success)' : '#e53e3e';
+  st.textContent = cnt > 0 ? '✅ '+p.name+' — '+cnt+' files ready' : '⚠️ No content — Save in Editor first';
+}
+
+// ── ZIP Upload (native) ──
+let nativeZip = null;
+function handleZipUpload(input) {
+  const f = input.files[0]; if (!f) return;
+  nativeZip = f;
+  document.getElementById('zipInfo').classList.add('show');
+  document.getElementById('zipName').textContent = f.name;
+  const mb = (f.size/1024/1024).toFixed(2);
+  document.getElementById('zipSize').textContent = mb + ' MB';
+  document.getElementById('nZipErr').classList.remove('show');
+}
+function handleZipDrop(e) {
+  e.preventDefault(); document.getElementById('zipZone').classList.remove('drag');
+  const f = e.dataTransfer.files[0];
+  if (!f||!f.name.endsWith('.zip')) { showToast('Please provide a ZIP file','error'); return; }
+  const dt = new DataTransfer(); dt.items.add(f);
+  document.getElementById('nZipFile').files = dt.files;
+  handleZipUpload(document.getElementById('nZipFile'));
+}
+
+// ── Terminal helpers ──
+function termLog(bodyId, cursorId, line) {
+  const body = document.getElementById(bodyId);
+  const cursor = document.getElementById(cursorId);
+  const l = line.toLowerCase();
+  let cls = '';
+  if (l.includes('error')||l.includes('failed')||l.includes('failure')) cls='err';
+  else if (l.includes('warn')) cls='warn';
+  else if (l.includes('success')||l.startsWith('build complete')||l==='done') cls='ok';
+  else if (l.startsWith('$')||l.includes('gradle')||l.includes('connecting')) cls='info';
+  const ts = new Date().toTimeString().substring(0,8);
+  const row = document.createElement('div'); row.className='log-line';
+  row.innerHTML = `<span class="log-ts">${ts}</span><span class="log-txt ${cls}">${line}</span>`;
+  body.insertBefore(row, cursor);
+  body.scrollTop = body.scrollHeight;
+}
+function copyTermLog(bodyId, btnId) {
+  const body = document.getElementById(bodyId);
+  const lines = body.querySelectorAll('.log-line .log-txt');
+  let text = '';
+  lines.forEach(l => { text += l.textContent + '\n'; });
+  if (!text.trim()) return;
+  navigator.clipboard.writeText(text.trim()).then(() => {
+    const btn = document.getElementById(btnId);
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#3fb950" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Copied!';
+    btn.style.color = '#3fb950';
+    btn.style.borderColor = '#2ea04333';
+    setTimeout(() => { btn.innerHTML = orig; btn.style.color = '#8b949e'; btn.style.borderColor = '#30363d'; }, 2000);
+  }).catch(() => showToast('Copy failed', 'error'));
+}
+function termSetStatus(statusId, state) {
+  const el = document.getElementById(statusId);
+  if (state==='run')  { el.className='term-status run';  el.textContent='● RUNNING'; }
+  else if(state==='done') { el.className='term-status done'; el.textContent='✓ DONE'; }
+  else { el.className='term-status fail'; el.textContent='✗ FAILED'; }
+}
+
+// ── WEB BUILD ──
+let webBuildCancel = null;
+function validateWeb() {
+  const name = document.getElementById('appName').value.trim();
+  const pkg  = document.getElementById('packageName').value.trim();
+  const nameOk = name.length > 0;
+  const pkgOk  = /^[a-z][a-z0-9]*(\.[a-z][a-z0-9]*)+$/.test(pkg);
+  document.getElementById('appNameErr').classList.toggle('show', !nameOk);
+  document.getElementById('pkgErr').classList.toggle('show', !pkgOk);
+  if (sourceMode==='online') {
+    const url = document.getElementById('homePage').value.trim();
+    const urlOk = /^https?:\/\/.+\..+/.test(url);
+    document.getElementById('urlErr').classList.toggle('show', !urlOk);
+    return nameOk&&pkgOk&&urlOk;
+  } else {
+    const ok = !!offlineProject;
+    document.getElementById('projErr').classList.toggle('show', !ok);
+    return nameOk&&pkgOk&&ok;
+  }
+}
+function setBuildBtn(id, txtId, iconId, spId, loading) {
+  document.getElementById(id).disabled = loading;
+  document.getElementById(txtId).style.display = loading ? 'none' : 'inline';
+  document.getElementById(iconId).style.display = loading ? 'none' : 'block';
+  document.getElementById(spId).style.display = loading ? 'flex' : 'none';
+}
+async function startWebBuild() {
+  if (!validateWeb()) return;
+  setBuildBtn('buildBtn','buildBtnTxt','buildBtnIcon','buildSpinner', true);
+  document.getElementById('webTermBody').innerHTML = '<span class="log-cursor" id="webCursor"></span>';
+  document.getElementById('webTerm').classList.add('show');
+  document.getElementById('webRes').classList.remove('show');
+  termSetStatus('webTermStatus','run');
+
+  let homePage = sourceMode==='online'
+    ? document.getElementById('homePage').value.trim()
+    : 'file:///android_asset/index.html';
+
+  const config = {
+    appName: document.getElementById('appName').value.trim(),
+    packageName: document.getElementById('packageName').value.trim(),
+    homePage, versionName: document.getElementById('versionName').value.trim()||'1.0',
+    versionCode: document.getElementById('versionCode').value.trim()||'1',
+    statusBarColor: document.getElementById('colorText').value.trim()||'#2563eb',
+    ...settings,
+    pushServerUrl:    settings.pushNotification ? 'https://dinalamin-din-push-server.hf.space/' : '',
+    pushPassword:     settings.pushNotification ? (document.getElementById('pushPassword').value.trim()||'')      : '',
+    fcmProjectId:     settings.pushNotification ? (document.getElementById('fcmProjectId').value.trim()||'')     : '',
+    fcmAppId:         settings.pushNotification ? (document.getElementById('fcmAppId').value.trim()||'')         : '',
+    fcmApiKey:        settings.pushNotification ? (document.getElementById('fcmApiKey').value.trim()||'')        : '',
+    fcmSenderId:      settings.pushNotification ? (document.getElementById('fcmSenderId').value.trim()||'')      : '',
+    fcmStorageBucket: settings.pushNotification ? (document.getElementById('fcmStorageBucket').value.trim()||'') : ''
+  };
+  // Push notification validation
+  if (settings.pushNotification && !config.pushPassword) {
+    showToast('Please enter a password for Push Notifications', 'error');
+    document.getElementById('pushPassword').focus();
+    return;
+  }
+  if (settings.pushNotification && config.pushPassword.length < 6) {
+    showToast('Password must be at least 6 characters', 'error');
+    document.getElementById('pushPassword').focus();
+    return;
+  }
+
+
+  if (sourceMode==='offline' && offlineProject) {
+    const _f = offlineProject.files||{};
+    const pagesMap = {};
+    // FIX: Previously only html/css/js/json was sent — images (icon/nav bar icon etc.)
+    // files were not sent to backend, so icons were missing in both encrypt on/off modes.
+    const SUPP = ['.html','.css','.js','.json','.png','.jpg','.jpeg','.gif','.webp','.svg','.ico'];
+    for (const [k,v] of Object.entries(_f)) {
+      if (typeof v!=='string'||!v.trim()) continue;
+      const fname = k.includes('/')?k.substring(k.lastIndexOf('/')+1):k;
+      if (!SUPP.some(e=>fname.endsWith(e))) continue;
+      pagesMap[fname] = v;
+    }
+    if (Object.keys(pagesMap).length>0) {
+      config.offlineMode=true; config.pages=pagesMap;
+      config.htmlContent=pagesMap['index.html']||'';
+    }
+  }
+
+  if (webBuildCancel) webBuildCancel();
+
+  // If push notification enabled, register password in Firestore before build starts
+  if (settings.pushNotification && config.pushPassword) {
+    try {
+      termLog('webTermBody','webCursor','Registering push notification password...');
+      const regRes  = await fetch('https://dinalamin-din-push-server.hf.space/register-app', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ appId: config.packageName, password: config.pushPassword }),
+        signal:  AbortSignal.timeout(10000)
+      });
+      const regData = await regRes.json();
+      if (!regData.success && regData.error === 'app_already_registered') {
+        showToast('This App ID is already registered with a different password. Use the original password.', 'error');
+        return;
+      }
+      if (!regData.success) {
+        showToast('Push setup failed: ' + (regData.error || 'Unknown error'), 'error');
+        return;
+      }
+      termLog('webTermBody','webCursor','✓ Push notification password registered');
+    } catch (e) {
+      showToast('Could not reach push server: ' + e.message, 'error');
+      return;
+    }
+  }
+
+  const h = Api.buildApkSSE(config, document.getElementById('iconFile').files[0]||null,
+    document.getElementById('splashFile').files[0]||null, {
+    onLog: line => termLog('webTermBody','webCursor',line),
+    onDone: blob => {
+      webBuildCancel=null;
+      termLog('webTermBody','webCursor','BUILD SUCCESSFUL');
+      termSetStatus('webTermStatus','done');
+      document.getElementById('webCursor').style.display='none';
+      const url = URL.createObjectURL(blob);
+      const fn  = config.appName.replace(/[^a-zA-Z0-9_-]/g,'_')+'.apk';
+      const rc = document.getElementById('webRes'); rc.className='res-card show ok';
+      document.getElementById('webResIcon').innerHTML='<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+      document.getElementById('webResTitle').textContent='APK Built Successfully!';
+      document.getElementById('webResSub').textContent='"'+config.appName+'" has been built.';
+      document.getElementById('webApkMeta').style.display='block';
+      document.getElementById('webMetaName').textContent=config.appName;
+      document.getElementById('webMetaPkg').textContent=config.packageName;
+      document.getElementById('webMetaVer').textContent=config.versionName+'('+config.versionCode+')';
+      const dl=document.getElementById('webDlBtn'); dl.href=url; dl.download=fn; dl.style.display='flex';
+      document.getElementById('webAgainBtn').style.display='flex';
+      showToast('APK built successfully! 🎉','success');
+      setBuildBtn('buildBtn','buildBtnTxt','buildBtnIcon','buildSpinner',false);
+    },
+    onError: msg => {
+      webBuildCancel=null;
+      termLog('webTermBody','webCursor','ERROR: '+msg);
+      termSetStatus('webTermStatus','fail');
+      document.getElementById('webCursor').style.display='none';
+      const rc=document.getElementById('webRes'); rc.className='res-card show err';
+      document.getElementById('webResIcon').innerHTML='<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+      document.getElementById('webResTitle').textContent='Build Failed';
+      document.getElementById('webResSub').textContent=msg;
+      document.getElementById('webAgainBtn').style.display='flex';
+      showToast('Build failed: '+msg,'error');
+      setBuildBtn('buildBtn','buildBtnTxt','buildBtnIcon','buildSpinner',false);
+    }
+  });
+  webBuildCancel = h.cancel;
+}
+function resetWebBuild() {
+  document.getElementById('webRes').classList.remove('show');
+  document.getElementById('webTerm').classList.remove('show');
+  document.getElementById('webDlBtn').style.display='none';
+  document.getElementById('webAgainBtn').style.display='none';
+  document.getElementById('webApkMeta').style.display='none';
+}
+
+// ── NATIVE BUILD ──
+let nBuildCancel = null;
+function validateNative() {
+  const name = document.getElementById('nAppName').value.trim();
+  const pkg  = document.getElementById('nPkgName').value.trim();
+  const nameOk = name.length>0;
+  const pkgOk  = /^[a-z][a-z0-9]*(\.[a-z][a-z0-9]*)+$/.test(pkg);
+  const zipOk  = !!nativeZip;
+  document.getElementById('nAppNameErr').classList.toggle('show',!nameOk);
+  document.getElementById('nPkgErr').classList.toggle('show',!pkgOk);
+  document.getElementById('nZipErr').classList.toggle('show',!zipOk);
+  return nameOk&&pkgOk&&zipOk;
+}
+async function startNativeBuild() {
+  if (!validateNative()) return;
+  setBuildBtn('nBuildBtn','nBuildTxt','nBuildIcon','nBuildSpinner',true);
+  document.getElementById('nTermBody').innerHTML='<span class="log-cursor" id="nCursor"></span>';
+  document.getElementById('nTerm').classList.add('show');
+  document.getElementById('nRes').classList.remove('show');
+  termSetStatus('nTermStatus','run');
+  if (nBuildCancel) nBuildCancel();
+  const h = Api.buildSourceZipSSE(
+    nativeZip,
+    document.getElementById('nAppName').value.trim(),
+    document.getElementById('nPkgName').value.trim(),
+    document.getElementById('nVerName').value.trim()||'1.0',
+    document.getElementById('nVerCode').value.trim()||'1',
+    Session.getSubActive(),
+    {
+      onLog: line => termLog('nTermBody','nCursor',line),
+      onDone: blob => {
+        nBuildCancel=null;
+        termLog('nTermBody','nCursor','BUILD SUCCESSFUL');
+        termSetStatus('nTermStatus','done');
+        document.getElementById('nCursor').style.display='none';
+        const url=URL.createObjectURL(blob);
+        const fn=document.getElementById('nAppName').value.replace(/[^a-zA-Z0-9_-]/g,'_')+'.apk';
+        const rc=document.getElementById('nRes'); rc.className='res-card show ok';
+        document.getElementById('nResIcon').innerHTML='<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+        document.getElementById('nResTitle').textContent='APK Built Successfully!';
+        document.getElementById('nResSub').textContent='"'+document.getElementById('nAppName').value+'" compiled.';
+        const dl=document.getElementById('nDlBtn'); dl.href=url; dl.download=fn; dl.style.display='flex';
+        document.getElementById('nAgainBtn').style.display='flex';
+        showToast('APK built! 🎉','success');
+        setBuildBtn('nBuildBtn','nBuildTxt','nBuildIcon','nBuildSpinner',false);
+      },
+      onError: msg => {
+        nBuildCancel=null;
+        termLog('nTermBody','nCursor','ERROR: '+msg);
+        termSetStatus('nTermStatus','fail');
+        document.getElementById('nCursor').style.display='none';
+        const rc=document.getElementById('nRes'); rc.className='res-card show err';
+        document.getElementById('nResIcon').innerHTML='<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+        document.getElementById('nResTitle').textContent='Build Failed';
+        document.getElementById('nResSub').textContent=msg;
+        document.getElementById('nAgainBtn').style.display='flex';
+        showToast('Build failed: '+msg,'error');
+        setBuildBtn('nBuildBtn','nBuildTxt','nBuildIcon','nBuildSpinner',false);
+      }
+    }
+  );
+  nBuildCancel = h.cancel;
+}
+function resetNativeBuild() {
+  document.getElementById('nRes').classList.remove('show');
+  document.getElementById('nTerm').classList.remove('show');
+  document.getElementById('nDlBtn').style.display='none';
+  document.getElementById('nAgainBtn').style.display='none';
+}
+
+// ── Auto detect project type from URL param ──
+(async () => {
+  const params = new URLSearchParams(window.location.search);
+  const pid = params.get('p');
+  const purl = params.get('url');
+
+  let projects = [];
+  try { projects = await WevloDB.getProjects(); } catch(e) {
+    try { projects = JSON.parse(localStorage.getItem('wevlo_projects')||'[]'); } catch(_) {}
+  }
+
+  if (pid) {
+    const proj = projects.find(p => p.id === pid);
+    if (proj && proj.type === 'native') {
+      showTab('native');
+      document.getElementById('nAppName').value = proj.name;
+      const slug = proj.name.toLowerCase().replace(/[^a-z0-9]/g,'').substring(0,10)||'app';
+      document.getElementById('nPkgName').value = 'com.'+slug+'.app';
+      const manifest = (proj.files||{})['AndroidManifest.xml']||'';
+      const pm = manifest.match(/package="([^"]+)"/);
+      if (pm) document.getElementById('nPkgName').value = pm[1];
+      const sx = (proj.files||{})['res/values/strings.xml']||'';
+      const sm = sx.match(/<string name="app_name"[^>]*>(.*?)<\/string>/i);
+      if (sm&&sm[1].trim()) document.getElementById('nAppName').value = sm[1].trim();
+      updateNativePreview();
+      // Create ZIP from project files
+      if (typeof JSZip !== 'undefined' && proj.files && Object.keys(proj.files).length > 0) {
+        try {
+          const z = new JSZip();
+          for (const [k,v] of Object.entries(proj.files)) { if(typeof v==='string') z.file(k,v); }
+          const blob = await z.generateAsync({type:'blob'});
+          nativeZip = new File([blob], proj.name+'.zip', {type:'application/zip'});
+          document.getElementById('zipInfo').classList.add('show');
+          document.getElementById('zipName').textContent = proj.name + ' (from editor)';
+          document.getElementById('zipSize').textContent = (blob.size/1024).toFixed(1)+' KB • '+Object.keys(proj.files).length+' files';
+          showToast('🤖 Kotlin/Java project loaded','success');
+        } catch(e) {}
+      }
+    } else if (proj) {
+      showTab('web');
+      if (purl) {
+        setMode('online');
+        document.getElementById('appName').value = proj.name;
+        document.getElementById('homePage').value = decodeURIComponent(purl);
+        updatePreview();
+      } else {
+        setMode('offline');
+        setTimeout(() => populatePicker(pid), 300);
+      }
+    }
+  } else {
+    showTab('web');
+    populatePicker();
+  }
+})();
+</script>
+<script src="../js/code.js"></script>
+</body>
+</html>
